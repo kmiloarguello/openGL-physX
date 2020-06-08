@@ -1,0 +1,9 @@
+﻿  myShader.cpp
+  11arrayoflights.cpp
+C:\Users\Edison\Documents\CA\E4_project\Examples\opengl-teaching-v141\opengl-teaching-v141\11arrayoflights\11arrayoflights.cpp(251,116): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\Users\Edison\Documents\CA\E4_project\Examples\opengl-teaching-v141\opengl-teaching-v141\11arrayoflights\11arrayoflights.cpp(252,101): warning C4267: 'argument': conversion from 'size_t' to 'GLint', possible loss of data
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 482 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  11arrayoflights.vcxproj -> C:\Users\Edison\Documents\CA\E4_project\Examples\opengl-teaching-v141\opengl-teaching-v141\x64\Release\11arrayoflights.exe

@@ -1,0 +1,2 @@
+-shadow mapping
+-bump mapping
