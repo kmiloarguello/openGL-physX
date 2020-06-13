@@ -496,13 +496,14 @@ int main(int argc, char* argv[])
 		
 		// If there is any actor...
 		if (nbActors) {
-			cout << "actooors: " << nbActors << endl;
+			//cout << "actooors: " << nbActors << endl;
 			
 			// Get the actors
 			std::vector<PxRigidActor*> actors(nbActors);
 			gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, reinterpret_cast<PxActor**>(&actors[0]), nbActors);
 			
 			// Render the actors
+			
 			const PxVec3 color(0.0f,1.0f,0.0f); 
 			const PxVec3 shadowDir(0.0f, -0.7071067f, -0.7071067f);
 			const PxReal shadowMat[] = { 1,0,0,0, -shadowDir.x / shadowDir.y,0,-shadowDir.z / shadowDir.y,0, 0,0,1,0, 0,0,0,1 };
@@ -513,27 +514,38 @@ int main(int argc, char* argv[])
 				const PxU32 nbShapes = actors[i]->getNbShapes();
 				PX_ASSERT(nbShapes <= MAX_NUM_ACTOR_SHAPES);
 				actors[i]->getShapes(shapes, nbShapes);
-				const bool sleeping = actors[i]->is<PxRigidDynamic>() ? actors[i]->is<PxRigidDynamic>()->isSleeping() : false;
-
+				//const bool sleeping = actors[i]->is<PxRigidDynamic>() ? actors[i]->is<PxRigidDynamic>()->isSleeping() : false;
+				
 				for (PxU32 j = 0;j < nbShapes;j++)
 				{
 					const PxMat44 shapePose(PxShapeExt::getGlobalPose(*shapes[j], *actors[i]));
-					const PxGeometryHolder h = shapes[j]->getGeometry();
-
+					const PxGeometryHolder containerGeometry = shapes[j]->getGeometry();
+				
 					if (shapes[j]->getFlags() & PxShapeFlag::eTRIGGER_SHAPE)
 						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 					// render object
 					glPushMatrix();
 					glMultMatrixf(&shapePose.column0.x);
+
+					// When sleeping is undefined
+					const PxVec3 darkColor = color * 0.25f;
+					glColor4f(darkColor.x, darkColor.y, darkColor.z, 1.0f);
+
+					/*
 					if (sleeping)
 					{
 						const PxVec3 darkColor = color * 0.25f;
 						glColor4f(darkColor.x, darkColor.y, darkColor.z, 1.0f);
 					}
 					else
+					{
 						glColor4f(color.x, color.y, color.z, 1.0f);
-					renderGeometryHolder(h);
+					}
+					*/
+					//renderGeometryHolder(containerGeometry);
+					/*
+					
 					glPopMatrix();
 
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -546,9 +558,12 @@ int main(int argc, char* argv[])
 					renderGeometryHolder(h);
 					glEnable(GL_LIGHTING);
 					glPopMatrix();
+					*/
 					
 				}
+				
 			}
+			
 		}
 
 		////////////////////////// END IMPLEMENTING AND RENDERING PHYSX /////////////////////////////
