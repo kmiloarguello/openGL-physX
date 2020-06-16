@@ -115,6 +115,27 @@ void init(void)
 {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glEnable(GL_DEPTH_TEST);
+
+    //// ADD LIGHTS
+
+    glClearColor(0.3f, 0.4f, 0.5f, 1.0);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
+
+    // Setup lighting
+    glEnable(GL_LIGHTING);
+    PxReal ambientColor[] = { 0.0f, 0.1f, 0.2f, 0.0f };
+    PxReal diffuseColor[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+    PxReal specularColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    PxReal position[] = { 100.0f, 100.0f, 400.0f, 1.0f };
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ambientColor);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseColor);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, specularColor);
+    glLightfv(GL_LIGHT0, GL_POSITION, position);
+    glEnable(GL_LIGHT0);
+
+    //// END ADD LIGHTS
+
     glutIdleFunc(idleCallback);
 }
 
@@ -233,7 +254,7 @@ void display(void)
     {
         std::vector<PxRigidActor*> actors(nbActors);
         gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, reinterpret_cast<PxActor**>(&actors[0]), nbActors);
-        renderActors(&actors[0], static_cast<PxU32>(actors.size()), false, color);
+        renderActors(&actors[0], static_cast<PxU32>(actors.size()), true, color);
     }
 
     glutSwapBuffers();
@@ -266,10 +287,10 @@ void renderActors(PxRigidActor** actors, const PxU32 numActors, bool shadows, co
             glPushMatrix();
             glMultMatrixf(&shapePose.column0.x);
 
-            glTranslatef(tx, ty, 0);
-            glRotatef(elbow, 1, 0, 0);
-            glScalef(sx, sy, sz);
-            cube();
+            //glTranslatef(tx, ty, 0);
+            //glRotatef(elbow, 1, 0, 0);
+            //glScalef(sx, sy, sz);
+            //cube();
 
             if (sleeping)
             {
@@ -503,7 +524,7 @@ void reshape(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(65.0, (GLfloat)w / (GLfloat)h, 1.0, 500.0);
-    gluLookAt(-5.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    gluLookAt(-50.0,100.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -3.0);
