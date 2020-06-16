@@ -46,6 +46,7 @@ PxMaterial* gMaterial2 = NULL;
 
 PxPvd* gPvd = NULL;
 
+
 vector<PxRigidActor*> boxes;
 #define MAX_NUM_MESH_VEC3S  1024
 static PxVec3 gVertexBuffer[MAX_NUM_MESH_VEC3S];
@@ -101,6 +102,7 @@ void cleanupPhysics();
 static PX_FORCE_INLINE void renderGeometryHolder(const PxGeometryHolder& h);
 static void renderGeometry(const PxGeometry& geom);
 void renderActors(PxRigidActor** actors, const PxU32 numActors, bool shadows, const PxVec3& color);
+void idleCallback();
 
 /// --------------------------------------------------------------------
 /// --------------------------------------------------------------------
@@ -113,6 +115,7 @@ void init(void)
 {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glEnable(GL_DEPTH_TEST);
+    glutIdleFunc(idleCallback);
 }
 
 // RENDER CUBE
@@ -216,13 +219,13 @@ void esfera(void)
 // DISPLAY ELEMENTS IN SCENE
 void display(void)
 {
+    stepPhysics();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // Get the scene
     PxGetPhysics().getScenes(&gScene, 1);
 
-    stepPhysics();
-
-    PxGetPhysics().getScenes(&gScene, 1);
     PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
     const PxVec3 color(1.0f, 1.0f, 0.0f);
 
@@ -268,7 +271,7 @@ void renderActors(PxRigidActor** actors, const PxU32 numActors, bool shadows, co
             glScalef(sx, sy, sz);
             cube();
 
-            /*if (sleeping)
+            if (sleeping)
             {
                 const PxVec3 darkColor = color * 0.25f;
                 glColor4f(darkColor.x, darkColor.y, darkColor.z, 1.0f);
@@ -277,7 +280,7 @@ void renderActors(PxRigidActor** actors, const PxU32 numActors, bool shadows, co
             {
                 glColor4f(color.x, color.y, color.z, 1.0f);
             }
-            */
+
             renderGeometryHolder(h);
             glPopMatrix();
 
@@ -488,6 +491,11 @@ static void renderGeometry(const PxGeometry& geom)
     }
 }
 
+void idleCallback()
+{
+    glutPostRedisplay();
+}
+
 // SETUP PROJECTION
 void reshape(int w, int h)
 {
@@ -495,9 +503,10 @@ void reshape(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(65.0, (GLfloat)w / (GLfloat)h, 1.0, 500.0);
+    gluLookAt(-5.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glTranslatef(0.0, 0.0, -10.0);
+    glTranslatef(0.0, 0.0, -3.0);
 }
 
 /// --------------------------------------------------------------------
@@ -579,7 +588,7 @@ void initPhysics()
     // It is good to mention the simulation part and the time slots fetch()
 
     PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
-    sceneDesc.gravity = PxVec3(0.0f, -3.81f, 0.0f);
+    sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
 
     // For handling the Threads, PhysX uses a gDispatcher
     // GPU Optimization
@@ -603,7 +612,7 @@ void initPhysics()
         pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
     }
 
-    gMaterial = gPhysics->createMaterial(1.0f, 1.0f, 1.0f);
+    gMaterial = gPhysics->createMaterial(0.0f, 1.0f, 1.0f);
     gMaterial2 = gPhysics->createMaterial(0.1f, 0.1f, 1.0f);
 
     // STEP 6
@@ -630,7 +639,7 @@ void initPhysics()
 void stepPhysics()
 {
     for (int i = 0;i < 10;i++) {
-        gScene->simulate(1.0f / 60.0f);
+        gScene->simulate(1.0f / 200.0f);
         gScene->fetchResults(true);
     }
 }
@@ -651,17 +660,21 @@ int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(500, 500);
+
+    glutInitWindowSize(600, 600);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(argv[0]);
     init();
  
     glutDisplayFunc(display);
-    glutReshapeFunc(reshape);
-    glutKeyboardFunc(keyboard);
 
     // Initialize PhysX
     initPhysics();
+
+    glutReshapeFunc(reshape);
+    glutKeyboardFunc(keyboard);
+   
+    
     glutMainLoop();
     return 0;
 }
