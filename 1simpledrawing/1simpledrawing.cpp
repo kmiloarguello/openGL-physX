@@ -37,6 +37,7 @@ PxDefaultErrorCallback	gErrorCallback;
 
 PxFoundation* gFoundation = NULL;
 PxPhysics* gPhysics = NULL;
+PxCooking* mCooking = NULL;
 
 PxDefaultCpuDispatcher* gDispatcher = NULL;
 PxScene* gScene = NULL;
@@ -113,8 +114,6 @@ void idleCallback();
 /// INITIALIZE OPENGL
 void init(void)
 {
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glEnable(GL_DEPTH_TEST);
 
     //// ADD LIGHTS
 
@@ -248,7 +247,7 @@ void display(void)
     PxGetPhysics().getScenes(&gScene, 1);
 
     PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
-    const PxVec3 color(1.0f, 1.0f, 0.0f);
+    const PxVec3 color(1.0f, 0.0f, 0.0f);
 
     if (nbActors)
     {
@@ -331,10 +330,12 @@ static PX_FORCE_INLINE void renderGeometryHolder(const PxGeometryHolder& h)
 // RENDER PHYSX GEOMETRY
 static void renderGeometry(const PxGeometry& geom)
 {
+    cout << "GEO: " << geom.getType() << endl;
     switch (geom.getType())
     {
     case PxGeometryType::eBOX:
     {
+        cout << "BOX" << endl;
         const PxBoxGeometry& boxGeom = static_cast<const PxBoxGeometry&>(geom);
         glScalef(boxGeom.halfExtents.x, boxGeom.halfExtents.y, boxGeom.halfExtents.z);
         glutSolidCube(2);
@@ -343,6 +344,7 @@ static void renderGeometry(const PxGeometry& geom)
 
     case PxGeometryType::eSPHERE:
     {
+        cout << "SPHERE" << endl;
         const PxSphereGeometry& sphereGeom = static_cast<const PxSphereGeometry&>(geom);
         glutSolidSphere(GLdouble(sphereGeom.radius), 10, 10);
     }
@@ -599,6 +601,20 @@ void initPhysics()
     PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate(PVD_HOST, 5425, 10);
     gPvd->connect(*transport, PxPvdInstrumentationFlag::eALL);
 
+    // COOKING INIT
+    // This is helpful to work with ConvexHull geometries
+
+    // 1. Define the scale
+    PxTolerancesScale scale;
+    scale.length = 100;        
+    scale.speed = 981;         // typical speed of an object, gravity*1s is a reasonable choice
+
+    mCooking = PxCreateCooking(PX_PHYSICS_VERSION, *gFoundation, PxCookingParams(scale));
+    if (!mCooking) {
+        cout << "PxCreateCooking failed!" << endl;
+    }
+        
+
     // STEP 3.
     // Here the library initialize the Physics with some tolerance (this can be updated) 
     // ? The tolerance is in animation, maybe gravity, etc
@@ -633,7 +649,7 @@ void initPhysics()
         pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
     }
 
-    gMaterial = gPhysics->createMaterial(0.0f, 1.0f, 1.0f);
+    gMaterial = gPhysics->createMaterial(0.0f, 0.0f, 1.0f);
     gMaterial2 = gPhysics->createMaterial(0.1f, 0.1f, 1.0f);
 
     // STEP 6
@@ -647,7 +663,7 @@ void initPhysics()
     boxes.push_back(groundPlane);
 
 
-    PxRigidDynamic* ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 100.0f, 0.0f)), PxSphereGeometry(3.0f), *gMaterial, 1.0f);
+    PxRigidDynamic* ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 50.0f, 0.0f)), PxSphereGeometry(3.0), *gMaterial, 1.0f);
     // Damping = amortiguamiento
     ball->setLinearDamping(0.05f);
     // Add a velocity
@@ -655,6 +671,40 @@ void initPhysics()
     gScene->addActor(*ball);
     boxes.push_back(ball);
 
+    // ---------------------------------------------------------------------
+    // EXAMPLE TO CREATE CONVEX HULL
+    static const PxVec3 convexVerts[] = { 
+        PxVec3(0,10,0),
+        PxVec3(10,0,0),
+        PxVec3(-10,0,0),
+        PxVec3(0,0,10),
+        PxVec3(0,0,-10) 
+    };
+
+    PxConvexMeshDesc convexDesc;
+    convexDesc.points.count = 5;
+    convexDesc.points.stride = sizeof(PxVec3);
+    convexDesc.points.data = convexVerts;
+    convexDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
+
+    PxDefaultMemoryOutputStream buf;
+    PxConvexMeshCookingResult::Enum result;
+
+    if (!mCooking->cookConvexMesh(convexDesc, buf, &result)) {
+        cout << "ERROR NULL" << endl;
+    }
+        
+    PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
+    PxConvexMesh* convexMesh = gPhysics->createConvexMesh(input);
+
+    PxRigidDynamic* aConvexActor = gPhysics->createRigidDynamic(PxTransform(PxVec3(-10.0f, 50.0f, 0.0f)));
+
+    PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor,PxConvexMeshGeometry(convexMesh),*gMaterial);
+
+    gScene->addActor(*aConvexActor);
+
+    // END EXAMPLE TO CREATE CONVEX HULL
+    // ---------------------------------------------------------------------
 }
 
 void stepPhysics()
