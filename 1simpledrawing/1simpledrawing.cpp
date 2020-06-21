@@ -20,9 +20,6 @@
 #include "PxPhysicsAPI.h"
 
 #include "myShader.h"
-//#include "../../../../PhysX/physx/snippets/snippetrender/SnippetRender.h";
-//#include "../../../../PhysX/physx/snippets/snippetrender/SnippetCamera.h";
-
 
 using namespace std;
 using namespace physx;
@@ -95,6 +92,9 @@ float compZ = -1.5;
 float sx = 1.0, sy = 1.0, sz = 1.0;
 float tx = 0.0, ty = 0.0;
 
+// Texture variables
+unsigned int _id;
+
 // INIT FUNCTIONS
 
 void stepPhysics();
@@ -114,12 +114,11 @@ void idleCallback();
 /// INITIALIZE OPENGL
 void init(void)
 {
-
     //// ADD LIGHTS
-
     glClearColor(0.3f, 0.4f, 0.5f, 1.0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_COLOR_MATERIAL);
+    glDepthFunc(GL_LEQUAL);
 
     // Setup lighting
     glEnable(GL_LIGHTING);
@@ -136,6 +135,16 @@ void init(void)
     //// END ADD LIGHTS
 
     glutIdleFunc(idleCallback);
+}
+
+void loadTextures(const char* filename) {
+    glGenTextures(1, &_id);
+    glBindTexture(GL_TEXTURE_2D, _id);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 // RENDER CUBE
@@ -689,17 +698,18 @@ int main(int argc, char** argv)
     glutInitWindowSize(600, 600);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(argv[0]);
-    init();
- 
+    
+    loadTextures("tex.bmp");
+    
+
     glutDisplayFunc(display);
 
     // Initialize PhysX
     initPhysics();
 
     glutReshapeFunc(reshape);
-    glutKeyboardFunc(keyboard);
-   
-    
+    glutKeyboardFunc(keyboard); 
     glutMainLoop();
+
     return 0;
 }
