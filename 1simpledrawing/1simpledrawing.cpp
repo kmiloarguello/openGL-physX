@@ -19,7 +19,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "PxPhysicsAPI.h"
 
-#include "myShader.h"
+//#include "myShader.h"
+#include "ImageLoader.h"
 
 using namespace std;
 using namespace physx;
@@ -138,6 +139,7 @@ void init(void)
 }
 
 void loadTextures(const char* filename) {
+    ImageLoader im(filename);
     glGenTextures(1, &_id);
     glBindTexture(GL_TEXTURE_2D, _id);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -145,55 +147,24 @@ void loadTextures(const char* filename) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, im.iWidth, im.iHeight, GL_RGB , GL_UNSIGNED_BYTE, im.textureData);
+
 }
 
 // RENDER CUBE
-void cube(void) {
+void cube() {
 
-    // White side - BACK
-    glBegin(GL_POLYGON);
-    glColor3f(1.0, 1.0, 1.0);
-    glVertex3f(0.5, -0.5, 0.5);
-    glVertex3f(0.5, 0.5, 0.5);
-    glVertex3f(-0.5, 0.5, 0.5);
-    glVertex3f(-0.5, -0.5, 0.5);
+    glEnable(GL_TEXTURE_2D);
+
+    glBegin(GL_QUADS);
+        glTexCoord2f(1.0f, 1.0f);       glVertex3f(10.0f,10.0f,0.0f);
+        glTexCoord2f(0.0f, 1.0f);       glVertex3f(-10.0f, 10.0f, 0.0f);
+        glTexCoord2f(0.0f, 0.0f);       glVertex3f(-10.0f, -10.0f, 0.0f);
+        glTexCoord2f(1.0f, 0.0f);       glVertex3f(10.0f, -10.0f, 0.0f);
     glEnd();
 
-    // Purple side - RIGHT
-    glBegin(GL_POLYGON);
-    glColor3f(1.0, 0.0, 1.0);
-    glVertex3f(0.5, -0.5, -0.5);
-    glVertex3f(0.5, 0.5, -0.5);
-    glVertex3f(0.5, 0.5, 0.5);
-    glVertex3f(0.5, -0.5, 0.5);
-    glEnd();
+    glDisable(GL_TEXTURE_2D);
 
-    // Green side - LEFT
-    glBegin(GL_POLYGON);
-    glColor3f(0.0, 1.0, 0.0);
-    glVertex3f(-0.5, -0.5, 0.5);
-    glVertex3f(-0.5, 0.5, 0.5);
-    glVertex3f(-0.5, 0.5, -0.5);
-    glVertex3f(-0.5, -0.5, -0.5);
-    glEnd();
-
-    // Blue side - TOP
-    glBegin(GL_POLYGON);
-    glColor3f(0.0, 0.0, 1.0);
-    glVertex3f(0.5, 0.5, 0.5);
-    glVertex3f(0.5, 0.5, -0.5);
-    glVertex3f(-0.5, 0.5, -0.5);
-    glVertex3f(-0.5, 0.5, 0.5);
-    glEnd();
-
-    // Red side - BOTTOM
-    glBegin(GL_POLYGON);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(0.5, -0.5, -0.5);
-    glVertex3f(0.5, -0.5, 0.5);
-    glVertex3f(-0.5, -0.5, 0.5);
-    glVertex3f(-0.5, -0.5, -0.5);
-    glEnd();
 }
 
 // DISPLAY ELEMENTS IN SCENE
@@ -246,10 +217,10 @@ void renderActors(PxRigidActor** actors, const PxU32 numActors, bool shadows, co
             glPushMatrix();
             glMultMatrixf(&shapePose.column0.x);
 
-            //glTranslatef(tx, ty, 0);
-            //glRotatef(elbow, 1, 0, 0);
+            //glTranslatef(0.0f, -1.0f, 0.0f);
             //glScalef(sx, sy, sz);
-            //cube();
+            glRotatef(90,0,1,0);
+            cube();
 
             if (sleeping)
             {
@@ -290,12 +261,10 @@ static PX_FORCE_INLINE void renderGeometryHolder(const PxGeometryHolder& h)
 // RENDER PHYSX GEOMETRY
 static void renderGeometry(const PxGeometry& geom)
 {
-    cout << "GEO: " << geom.getType() << endl;
     switch (geom.getType())
     {
     case PxGeometryType::eBOX:
     {
-        cout << "BOX" << endl;
         const PxBoxGeometry& boxGeom = static_cast<const PxBoxGeometry&>(geom);
         glScalef(boxGeom.halfExtents.x, boxGeom.halfExtents.y, boxGeom.halfExtents.z);
         glutSolidCube(2);
@@ -304,7 +273,6 @@ static void renderGeometry(const PxGeometry& geom)
 
     case PxGeometryType::eSPHERE:
     {
-        cout << "SPHERE" << endl;
         const PxSphereGeometry& sphereGeom = static_cast<const PxSphereGeometry&>(geom);
         glutSolidSphere(GLdouble(sphereGeom.radius), 10, 10);
     }
@@ -486,7 +454,7 @@ void reshape(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(65.0, (GLfloat)w / (GLfloat)h, 1.0, 500.0);
-    gluLookAt(-50.0,100.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    gluLookAt(-50.0,50.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -3.0);
@@ -630,7 +598,7 @@ void initPhysics()
     // Add a velocity
     ball->setLinearVelocity(PxVec3(0, -50, 0));
     gScene->addActor(*ball);
-    boxes.push_back(ball);
+    //boxes.push_back(ball);
 
     // ---------------------------------------------------------------------
     // EXAMPLE TO CREATE CONVEX HULL
@@ -662,8 +630,8 @@ void initPhysics()
 
     PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor,PxConvexMeshGeometry(convexMesh),*gMaterial);
 
-    gScene->addActor(*aConvexActor);
-    boxes.push_back(aConvexActor);
+    //gScene->addActor(*aConvexActor);
+    //boxes.push_back(aConvexActor);
 
     // END EXAMPLE TO CREATE CONVEX HULL
     // ---------------------------------------------------------------------
@@ -698,10 +666,9 @@ int main(int argc, char** argv)
     glutInitWindowSize(600, 600);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(argv[0]);
+    init();
+    loadTextures("./assets/images/scenary.bmp");
     
-    loadTextures("tex.bmp");
-    
-
     glutDisplayFunc(display);
 
     // Initialize PhysX
