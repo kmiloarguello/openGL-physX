@@ -140,16 +140,6 @@ void init(void)
 
 // RENDER CUBE
 void cube(void) {
-    // Multi-colored side - FRONT
-    //glBegin(GL_QUADS);
-
-    // Vertices will be added in the next step
-    //glVertex3f(-0.5, -0.5, -0.5);       // P1
-    //glVertex3f(-0.5, 0.5, -0.5);       // P2
-    //glVertex3f(0.5, 0.5, -0.5);       // P3
-    //glVertex3f(0.5, -0.5, -0.5);       // P4
-
-    //glEnd();
 
     // White side - BACK
     glBegin(GL_POLYGON);
@@ -195,45 +185,6 @@ void cube(void) {
     glVertex3f(-0.5, -0.5, 0.5);
     glVertex3f(-0.5, -0.5, -0.5);
     glEnd();
-}
-
-// RENDER SPHERE
-void esfera(void)
-{
-    // se generan los puntos de la esfera y se guardan en una matriz
-    // para esto se emplean coordenadas esfericas
-    theta = 2 * PI / m;
-
-    //alpha=PI/lat
-    delta = r / m;
-    for (int i = 0; i <= n; i++) {
-        //cout<<"latitud: "<<i<<endl;
-        for (int j = 0; j <= m; j++) {
-
-            puntos[i][j][0] = (r - (delta * i) * cos(theta * j));
-            puntos[i][j][1] = (r - (delta * i) * sin(theta * j));
-            puntos[i][j][2] = (h / n) * i;
-            //cout<<"puntos(x,y,z): "<< puntos[i][j][0]<<", "<<puntos[i][j][1]<<", "<<puntos[i][j][2]<<endl;
-        }
-        //cout<<endl;
-    }
-
-    for (int i = 0; i < n; i++) {
-        //cout<<"latitud: "<<i<<endl;
-        glColor3f(1 - (float)i / (float)n, 1 - (float)i / (float)n, 1 - (float)i / (float)n);
-        for (int j = 0; j < m; j++) {
-            glBegin(GL_QUADS);
-            //glColor3f((float)i/(float)lat,(float)j/(float)lon,0.5);
-            glVertex3f(puntos[i][j][0], puntos[i][j][1], puntos[i][j][2]);
-            // glColor3f((float)(i+1)/(float)lat,(float)j/(float)lon,0.5);
-            glVertex3f(puntos[i + 1][j][0], puntos[i + 1][j][1], puntos[i + 1][j][2]);
-            glColor3f((float)(i + 1) / (float)n, (float)(j + 1) / (float)m, 0.5);
-            glVertex3f(puntos[i + 1][j + 1][0], puntos[i + 1][j + 1][1], puntos[i + 1][j + 1][2]);
-            // glColor3f((float)i/(float)lat,(float)(j+1)/(float)lon,0.5);
-            glVertex3f(puntos[i][j + 1][0], puntos[i][j + 1][1], puntos[i][j + 1][2]);
-            glEnd();
-        }
-    }
 }
 
 // DISPLAY ELEMENTS IN SCENE
@@ -609,6 +560,7 @@ void initPhysics()
     scale.length = 100;        
     scale.speed = 981;         // typical speed of an object, gravity*1s is a reasonable choice
 
+    //  cooking transforms the mesh data into a form which allows the SDK to perform efficient collision detection
     mCooking = PxCreateCooking(PX_PHYSICS_VERSION, *gFoundation, PxCookingParams(scale));
     if (!mCooking) {
         cout << "PxCreateCooking failed!" << endl;
@@ -678,7 +630,7 @@ void initPhysics()
         PxVec3(10,0,0),
         PxVec3(-10,0,0),
         PxVec3(0,0,10),
-        PxVec3(0,0,-10) 
+        PxVec3(0,0,-10)
     };
 
     PxConvexMeshDesc convexDesc;
@@ -702,9 +654,11 @@ void initPhysics()
     PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor,PxConvexMeshGeometry(convexMesh),*gMaterial);
 
     gScene->addActor(*aConvexActor);
+    boxes.push_back(aConvexActor);
 
     // END EXAMPLE TO CREATE CONVEX HULL
     // ---------------------------------------------------------------------
+
 }
 
 void stepPhysics()
