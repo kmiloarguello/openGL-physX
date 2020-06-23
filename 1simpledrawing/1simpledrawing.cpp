@@ -138,8 +138,7 @@ void init(void)
     glutIdleFunc(idleCallback);
 }
 
-void loadTextures(const char* filename) {
-    ImageLoader im(filename);
+void setupTextures() {
     glGenTextures(1, &_id);
     glBindTexture(GL_TEXTURE_2D, _id);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -147,21 +146,39 @@ void loadTextures(const char* filename) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+}
+
+void loadTextures(const char* filename) {
+    ImageLoader im(filename);
+    setupTextures();
     gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, im.iWidth, im.iHeight, GL_RGB , GL_UNSIGNED_BYTE, im.textureData);
 
 }
 
-// RENDER CUBE
-void cube() {
+// RENDER Room
+void renderRoom() {
 
     glEnable(GL_TEXTURE_2D);
-
+    
+   
+    // LEFT WALL
     glBegin(GL_QUADS);
-        glTexCoord2f(1.0f, 1.0f);       glVertex3f(10.0f,10.0f,0.0f);
-        glTexCoord2f(0.0f, 1.0f);       glVertex3f(-10.0f, 10.0f, 0.0f);
-        glTexCoord2f(0.0f, 0.0f);       glVertex3f(-10.0f, -10.0f, 0.0f);
-        glTexCoord2f(1.0f, 0.0f);       glVertex3f(10.0f, -10.0f, 0.0f);
+        glTexCoord2f(1.0f, 1.0f);       glVertex3f(100.0f,100.0f, 100.0f);
+        glTexCoord2f(0.0f, 1.0f);       glVertex3f(-100.0f, 100.0f, 100.0f);
+        glTexCoord2f(0.0f, 0.0f);       glVertex3f(-100.0f, 0.0f, 100.0f);
+        glTexCoord2f(1.0f, 0.0f);       glVertex3f(100.0f, 0.0f, 100.0f);
     glEnd();
+    
+
+    // GROUND
+    // Load the ground as QUADS and apply the textures given a defined vertices
+    glBegin(GL_QUADS);
+        glTexCoord2f(1.0f, 1.0f);       glVertex3f(100.0f, 0.0f, 100.0f);
+        glTexCoord2f(0.0f, 1.0f);       glVertex3f(-100.0f, 0.0f, 100.0f);
+        glTexCoord2f(0.0f, 0.0f);       glVertex3f(-100.0f, 0.0f, -100.0f);
+        glTexCoord2f(1.0f, 0.0f);       glVertex3f(100.0f, 0.0f, -100.0f);
+    glEnd();
+
 
     glDisable(GL_TEXTURE_2D);
 
@@ -179,6 +196,11 @@ void display(void)
 
     PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
     const PxVec3 color(1.0f, 0.0f, 0.0f);
+
+    //glTranslatef(0.0f, -1.0f, 0.0f);
+    //glScalef(sx, sy, sz);
+    //glRotatef(90, 0, 1, 0);
+    renderRoom();
 
     if (nbActors)
     {
@@ -216,11 +238,6 @@ void renderActors(PxRigidActor** actors, const PxU32 numActors, bool shadows, co
             // render object
             glPushMatrix();
             glMultMatrixf(&shapePose.column0.x);
-
-            //glTranslatef(0.0f, -1.0f, 0.0f);
-            //glScalef(sx, sy, sz);
-            glRotatef(90,0,1,0);
-            cube();
 
             if (sleeping)
             {
@@ -454,7 +471,7 @@ void reshape(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(65.0, (GLfloat)w / (GLfloat)h, 1.0, 500.0);
-    gluLookAt(-50.0,50.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    gluLookAt(-200.0,200.0,-100.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -3.0);
@@ -579,39 +596,63 @@ void initPhysics()
     }
 
     gMaterial = gPhysics->createMaterial(0.0f, 0.0f, 1.0f);
-    gMaterial2 = gPhysics->createMaterial(0.1f, 0.1f, 1.0f);
+    gMaterial2 = gPhysics->createMaterial(20.0f, 0.1f, 1.0f);
 
     // STEP 6
     // BASE -> Actor -> RigidBody
     // PxRigidStatic simulates a rigid body object 
     // PxCreatePlane is method to create planes of equation a.x + b = 0
     // PxPlane Normal Vector - Distance to the origin (last parameter)
-    PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
-    // Adding this actor to the scene
+    PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0.0f, 1.0f, 0.0f, 2.0f), *gMaterial2);
     gScene->addActor(*groundPlane);
     boxes.push_back(groundPlane);
 
-
-    PxRigidDynamic* ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 50.0f, 0.0f)), PxSphereGeometry(3.0), *gMaterial, 1.0f);
+    // TODO: Try to add the four planes or use cubes to complete the walls
+    /*
+    PxRigidStatic* room1WallLeft = PxCreatePlane(*gPhysics, PxPlane(-1.0f, 0.0f, 0.0f, 100.0f), *gMaterial);
+    gScene->addActor(*room1WallLeft);
+    boxes.push_back(room1WallLeft);
+    */
+    /*
+    PxRigidStatic* room1WallLeftNeg = PxCreatePlane(*gPhysics, PxPlane(-1.0f, 0.0f, 0.0f, -100.0f), *gMaterial);
+    gScene->addActor(*room1WallLeftNeg);
+    boxes.push_back(room1WallLeftNeg);*/
+    
+    PxRigidStatic* room1WallRight = PxCreatePlane(*gPhysics, PxPlane(0.0f, 0.0f, -1.0f, 100.0f), *gMaterial);
+    gScene->addActor(*room1WallRight);
+    boxes.push_back(room1WallRight);
+    /*
+    PxRigidStatic* room1WallRightNeg = PxCreatePlane(*gPhysics, PxPlane(0.0f, 0.0f, 1.0f, -200.0f), *gMaterial);
+    gScene->addActor(*room1WallRightNeg);
+    boxes.push_back(room1WallRightNeg);
+    */
+    PxRigidDynamic* ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 50.0f, 0.0f)), PxSphereGeometry(10.0), *gMaterial, 1.0f);
     // Damping = amortiguamiento
     ball->setLinearDamping(0.05f);
     // Add a velocity
-    ball->setLinearVelocity(PxVec3(0, -50, 0));
+    ball->setLinearVelocity(PxVec3(0, 0, 30));
     gScene->addActor(*ball);
     //boxes.push_back(ball);
 
     // ---------------------------------------------------------------------
     // EXAMPLE TO CREATE CONVEX HULL
     static const PxVec3 convexVerts[] = { 
-        PxVec3(0,10,0),
+        // RIGHT SIDE 4 vertices
+        PxVec3(50,50,0),
+        PxVec3(0,50,0),
+        PxVec3(0,0,0),
+        PxVec3(50,0,0)
+
+        /*PxVec3(0,10,0),
         PxVec3(10,0,0),
         PxVec3(-10,0,0),
         PxVec3(0,0,10),
-        PxVec3(0,0,-10)
+        PxVec3(0,0,-10)*/
+
     };
 
     PxConvexMeshDesc convexDesc;
-    convexDesc.points.count = 5;
+    convexDesc.points.count = 4;
     convexDesc.points.stride = sizeof(PxVec3);
     convexDesc.points.data = convexVerts;
     convexDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
@@ -666,8 +707,13 @@ int main(int argc, char** argv)
     glutInitWindowSize(600, 600);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(argv[0]);
+
+    // INIT LIGHTS AND COLORS
     init();
+
+    // TODO: Improve the textures - Add one texture for each object
     loadTextures("./assets/images/scenary.bmp");
+    //loadTextures("./assets/images/scenary.bmp");
     
     glutDisplayFunc(display);
 
