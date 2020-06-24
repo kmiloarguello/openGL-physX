@@ -723,6 +723,5 @@ int main(int argc, char** argv)
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard); 
     glutMainLoop();
-
     return 0;
 }
