@@ -23,6 +23,9 @@
     <ClCompile Include="..\Common\myShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ImageLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="basic-fragmentshader.glsl">
@@ -31,5 +34,8 @@
     <None Include="basic-vertexshader.glsl">
       <Filter>Shaders</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ImageLoader.h" />
   </ItemGroup>
 </Project>
