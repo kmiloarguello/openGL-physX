@@ -26,6 +26,9 @@
     <ClCompile Include="ImageLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PinballESIEE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="basic-fragmentshader.glsl">
@@ -37,5 +40,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImageLoader.h" />
+    <ClInclude Include="PinballESIEE.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="globals.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="1simpledrawing.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

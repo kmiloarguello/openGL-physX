@@ -1,29 +1,12 @@
-#include <fstream>
-#include <string>
-#include <vector>
-#include <iostream>
-
-#include <GL/glew.h>
-#include <GL/glut.h>
-
-#include <SDL2/SDL_main.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#undef main
-
-#define GLM_FORCE_RADIANS
-#define PVD_HOST "127.0.0.1"
-#define MAX_NUM_ACTOR_SHAPES 128
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp> 
-#include <glm/gtc/type_ptr.hpp>
-#include "PxPhysicsAPI.h"
+#include "globals.h";
 
 //#include "myShader.h"
 #include "ImageLoader.h"
 
 using namespace std;
 using namespace physx;
+
+static PxVec3 gVertexBuffer[MAX_NUM_MESH_VEC3S];
 
 // SDL variables
 SDL_Window* window;
@@ -45,25 +28,7 @@ PxMaterial* gMaterial2 = NULL;
 
 PxPvd* gPvd = NULL;
 
-
 vector<PxRigidActor*> boxes;
-#define MAX_NUM_MESH_VEC3S  1024
-static PxVec3 gVertexBuffer[MAX_NUM_MESH_VEC3S];
-static float gCylinderData[] = {
-	1.0f,0.0f,1.0f,1.0f,0.0f,1.0f,1.0f,0.0f,0.0f,1.0f,0.0f,0.0f,
-	0.866025f,0.500000f,1.0f,0.866025f,0.500000f,1.0f,0.866025f,0.500000f,0.0f,0.866025f,0.500000f,0.0f,
-	0.500000f,0.866025f,1.0f,0.500000f,0.866025f,1.0f,0.500000f,0.866025f,0.0f,0.500000f,0.866025f,0.0f,
-	-0.0f,1.0f,1.0f,-0.0f,1.0f,1.0f,-0.0f,1.0f,0.0f,-0.0f,1.0f,0.0f,
-	-0.500000f,0.866025f,1.0f,-0.500000f,0.866025f,1.0f,-0.500000f,0.866025f,0.0f,-0.500000f,0.866025f,0.0f,
-	-0.866025f,0.500000f,1.0f,-0.866025f,0.500000f,1.0f,-0.866025f,0.500000f,0.0f,-0.866025f,0.500000f,0.0f,
-	-1.0f,-0.0f,1.0f,-1.0f,-0.0f,1.0f,-1.0f,-0.0f,0.0f,-1.0f,-0.0f,0.0f,
-	-0.866025f,-0.500000f,1.0f,-0.866025f,-0.500000f,1.0f,-0.866025f,-0.500000f,0.0f,-0.866025f,-0.500000f,0.0f,
-	-0.500000f,-0.866025f,1.0f,-0.500000f,-0.866025f,1.0f,-0.500000f,-0.866025f,0.0f,-0.500000f,-0.866025f,0.0f,
-	0.0f,-1.0f,1.0f,0.0f,-1.0f,1.0f,0.0f,-1.0f,0.0f,0.0f,-1.0f,0.0f,
-	0.500000f,-0.866025f,1.0f,0.500000f,-0.866025f,1.0f,0.500000f,-0.866025f,0.0f,0.500000f,-0.866025f,0.0f,
-	0.866026f,-0.500000f,1.0f,0.866026f,-0.500000f,1.0f,0.866026f,-0.500000f,0.0f,0.866026f,-0.500000f,0.0f,
-	1.0f,0.0f,1.0f,1.0f,0.0f,1.0f,1.0f,0.0f,0.0f,1.0f,0.0f,0.0f
-};
 
 // GUI variables
 bool quit = false;
@@ -84,7 +49,6 @@ glm::vec3 camera_forward = glm::vec3(0.0f, 0.0f, -1.0f);
 
 static int shoulder = 0, elbow = 0;
 
-# define PI 3.1415
 int n = 20, m = 20;
 float r = 1.0, alpha = 0.0, theta = 0.0, delta, h = 1.0;
 float xp, yp, zp, puntos[100][100][3], ptosElipses[100][100][2];
@@ -92,6 +56,7 @@ float ry = 1.0;
 float compZ = -1.5;
 float sx = 1.0, sy = 1.0, sz = 1.0;
 float tx = 0.0, ty = 0.0;
+
 
 // Texture variables
 unsigned int _id;
@@ -162,13 +127,13 @@ void renderRoom() {
     
    
     // LEFT WALL
-    glBegin(GL_QUADS);
+    /*glBegin(GL_QUADS);
         glTexCoord2f(1.0f, 1.0f);       glVertex3f(100.0f,100.0f, 100.0f);
         glTexCoord2f(0.0f, 1.0f);       glVertex3f(-100.0f, 100.0f, 100.0f);
         glTexCoord2f(0.0f, 0.0f);       glVertex3f(-100.0f, 0.0f, 100.0f);
         glTexCoord2f(1.0f, 0.0f);       glVertex3f(100.0f, 0.0f, 100.0f);
     glEnd();
-    
+    */
 
     // GROUND
     // Load the ground as QUADS and apply the textures given a defined vertices
@@ -532,10 +497,33 @@ void keyboard(unsigned char key, int x, int y)
 /// PHYSX
 /// --------------------------------------------------------------------
 /// --------------------------------------------------------------------
+
+void createHull(PxVec3 convexVerts[], PxI32 numberVertices, PxVec3 position) {
+    PxConvexMeshDesc convexDesc;
+    convexDesc.points.count = numberVertices;
+    convexDesc.points.stride = sizeof(PxVec3);
+    convexDesc.points.data = convexVerts;
+    convexDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
+
+    PxDefaultMemoryOutputStream buf;
+    PxConvexMeshCookingResult::Enum result;
+
+    if (!mCooking->cookConvexMesh(convexDesc, buf, &result)) {
+        cout << "ERROR NULL" << endl;
+    }
+
+    PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
+    PxConvexMesh* convexMesh = gPhysics->createConvexMesh(input);
+    PxRigidDynamic* aConvexActor = gPhysics->createRigidDynamic(PxTransform(position));
+    PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor, PxConvexMeshGeometry(convexMesh), *gMaterial);
+
+    gScene->addActor(*aConvexActor);
+}
+
 void initPhysics()
 {
     cout << "Initializing PhysX" << endl;
-    // STEP 2.
+
     // Initialization of PhysX
     // The gFoundation instance initialize PhysX
     // This uses some callbacks for memory allocation and errors and also the ID version
@@ -561,13 +549,11 @@ void initPhysics()
     }
         
 
-    // STEP 3.
     // Here the library initialize the Physics with some tolerance (this can be updated) 
     // ? The tolerance is in animation, maybe gravity, etc
     // This PxCreatePhysics does not have Articulations nor Height fields
     gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(), true, gPvd);
 
-    // STEP 4.
     // It is good to mention the simulation part and the time slots fetch()
 
     PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
@@ -580,8 +566,6 @@ void initPhysics()
     sceneDesc.filterShader = PxDefaultSimulationFilterShader;
 
     // PhysX Works using Tasks, specially for simulation
-
-    // STEP 5
     // Creating the scene with the init parameters
     // Every scene uses a Thread Local Storage slot.
     gScene = gPhysics->createScene(sceneDesc);
@@ -598,84 +582,95 @@ void initPhysics()
     gMaterial = gPhysics->createMaterial(0.0f, 0.0f, 1.0f);
     gMaterial2 = gPhysics->createMaterial(20.0f, 0.1f, 1.0f);
 
-    // STEP 6
     // BASE -> Actor -> RigidBody
     // PxRigidStatic simulates a rigid body object 
     // PxCreatePlane is method to create planes of equation a.x + b = 0
     // PxPlane Normal Vector - Distance to the origin (last parameter)
-    PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0.0f, 1.0f, 0.0f, 2.0f), *gMaterial2);
+    PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0.0f, 1.0f, 0.0f, 0.0f), *gMaterial2);
     gScene->addActor(*groundPlane);
     boxes.push_back(groundPlane);
 
-    // TODO: Try to add the four planes or use cubes to complete the walls
-    /*
-    PxRigidStatic* room1WallLeft = PxCreatePlane(*gPhysics, PxPlane(-1.0f, 0.0f, 0.0f, 100.0f), *gMaterial);
-    gScene->addActor(*room1WallLeft);
-    boxes.push_back(room1WallLeft);
-    */
-    /*
-    PxRigidStatic* room1WallLeftNeg = PxCreatePlane(*gPhysics, PxPlane(-1.0f, 0.0f, 0.0f, -100.0f), *gMaterial);
-    gScene->addActor(*room1WallLeftNeg);
-    boxes.push_back(room1WallLeftNeg);*/
+    // ------------------------------------------------------------------------------------------------
+
+    /////////////////////////////////////////////////////
+    /// ----------------- WALLS ---------------------- //
+    /////////////////////////////////////////////////////
+    PxShape* wall1Shape = gPhysics->createShape(PxBoxGeometry( 100.0f, 10.0f, 2.0f), *gMaterial);
+    PxRigidStatic* wall1 = gPhysics->createRigidStatic(PxTransform(PxVec3( 0.0f, 10.0f, 100.0f )));
+    wall1->attachShape(*wall1Shape);
+    gScene->addActor(*wall1);
+
+    PxShape* wall2Shape = gPhysics->createShape(PxBoxGeometry(100.0f, 10.0f, 2.0f), *gMaterial);
+    PxRigidStatic* wall2 = gPhysics->createRigidStatic(PxTransform(PxVec3(0.0f, 10.0f, -100.0f)));
+    wall2->attachShape(*wall2Shape);
+    gScene->addActor(*wall2);
+
+    PxShape* wall3Shape = gPhysics->createShape(PxBoxGeometry(2.0f, 10.0f, 100.0f), *gMaterial);
+    PxRigidStatic* wall3 = gPhysics->createRigidStatic(PxTransform(PxVec3(100.0f, 10.0f, 0.0f)));
+    wall3->attachShape(*wall3Shape);
+    gScene->addActor(*wall3);
+
+    PxShape* wall4Shape = gPhysics->createShape(PxBoxGeometry(2.0f, 10.0f, 100.0f), *gMaterial);
+    PxRigidStatic* wall4 = gPhysics->createRigidStatic(PxTransform(PxVec3(-100.0f, 10.0f, 0.0f)));
+    wall4->attachShape(*wall4Shape);
+    gScene->addActor(*wall4);
+    /////////////////////////////////////////////////////
+    /// ----------------- END WALLS ------------------ //
+    /////////////////////////////////////////////////////
+
+    // ------------------------------------------------------------------------------------------------
+
+    /////////////////////////////////////////////////////
+    /// ----------- OBSTACLES  ---------------------- //
+    /////////////////////////////////////////////////////
+
+    // Obstacle 1
+    PxRigidDynamic* obstacle1 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 10.0f, 70.0f)), PxBoxGeometry(10.0f,10.0f,10.0f), *gMaterial, 1.0f);
+    //obstacle1->addForce(PxVec3(0.0f, 0.0f, 5.0f), PxForceMode::eIMPULSE);
+    obstacle1->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+    obstacle1->setMass(0.f);
+    obstacle1->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
+    gScene->addActor(*obstacle1);
     
-    PxRigidStatic* room1WallRight = PxCreatePlane(*gPhysics, PxPlane(0.0f, 0.0f, -1.0f, 100.0f), *gMaterial);
-    gScene->addActor(*room1WallRight);
-    boxes.push_back(room1WallRight);
-    /*
-    PxRigidStatic* room1WallRightNeg = PxCreatePlane(*gPhysics, PxPlane(0.0f, 0.0f, 1.0f, -200.0f), *gMaterial);
-    gScene->addActor(*room1WallRightNeg);
-    boxes.push_back(room1WallRightNeg);
-    */
-    PxRigidDynamic* ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 50.0f, 0.0f)), PxSphereGeometry(10.0), *gMaterial, 1.0f);
-    // Damping = amortiguamiento
-    ball->setLinearDamping(0.05f);
-    // Add a velocity
-    ball->setLinearVelocity(PxVec3(0, 0, 30));
-    gScene->addActor(*ball);
-    //boxes.push_back(ball);
 
-    // ---------------------------------------------------------------------
-    // EXAMPLE TO CREATE CONVEX HULL
-    static const PxVec3 convexVerts[] = { 
-        // RIGHT SIDE 4 vertices
-        PxVec3(50,50,0),
-        PxVec3(0,50,0),
-        PxVec3(0,0,0),
-        PxVec3(50,0,0)
-
-        /*PxVec3(0,10,0),
+    // Obstacle 2
+    PxVec3 convexVerts[] = {
+        PxVec3(0,10,0),
         PxVec3(10,0,0),
         PxVec3(-10,0,0),
         PxVec3(0,0,10),
-        PxVec3(0,0,-10)*/
-
+        PxVec3(0,0,-10)
     };
+    createHull(convexVerts, 5, PxVec3(50.0f, 0.0f, 0.0f));
 
-    PxConvexMeshDesc convexDesc;
-    convexDesc.points.count = 4;
-    convexDesc.points.stride = sizeof(PxVec3);
-    convexDesc.points.data = convexVerts;
-    convexDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
+    // Obstacle 3
+    PxVec3 convexVerts2[] = {
+        PxVec3(0,20,0),
+        PxVec3(10,0,0),
+        PxVec3(-10,0,0),
+        PxVec3(0,0,10),
+        PxVec3(0,0,-10)
+    };
+    createHull(convexVerts2, 5, PxVec3(-50.0f, 0.0f, 0.0f));
+    
+    /////////////////////////////////////////////////////
+    /// ----------- END OBSTACLES  ------------------- //
+    /////////////////////////////////////////////////////
 
-    PxDefaultMemoryOutputStream buf;
-    PxConvexMeshCookingResult::Enum result;
+    // ------------------------------------------------------------------------------------------------
 
-    if (!mCooking->cookConvexMesh(convexDesc, buf, &result)) {
-        cout << "ERROR NULL" << endl;
-    }
-        
-    PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
-    PxConvexMesh* convexMesh = gPhysics->createConvexMesh(input);
+    /////////////////////////////////////////////////////
+    /// ----------------- BALL  ---------------------- //
+    /////////////////////////////////////////////////////
 
-    PxRigidDynamic* aConvexActor = gPhysics->createRigidDynamic(PxTransform(PxVec3(-10.0f, 50.0f, 0.0f)));
-
-    PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor,PxConvexMeshGeometry(convexMesh),*gMaterial);
-
-    //gScene->addActor(*aConvexActor);
-    //boxes.push_back(aConvexActor);
-
-    // END EXAMPLE TO CREATE CONVEX HULL
-    // ---------------------------------------------------------------------
+    PxRigidDynamic* ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 5.0f, 0.0f)), PxSphereGeometry(3.0), *gMaterial, 1.0f);
+    ball->setLinearDamping(0.05f);
+    ball->setLinearVelocity(PxVec3(0, 0, 30));
+    gScene->addActor(*ball);
+  
+    /////////////////////////////////////////////////////
+    /// ----------------- BALL  ---------------------- //
+    /////////////////////////////////////////////////////
 
 }
 

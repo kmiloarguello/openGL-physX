@@ -162,13 +162,20 @@
     <ClCompile Include="..\Common\myShader.cpp" />
     <ClCompile Include="1simpledrawing.cpp" />
     <ClCompile Include="ImageLoader.cpp" />
+    <ClCompile Include="PinballESIEE.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="basic-fragmentshader.glsl" />
     <None Include="basic-vertexshader.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="globals.h" />
     <ClInclude Include="ImageLoader.h" />
+    <ClInclude Include="PinballESIEE.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="1simpledrawing.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
