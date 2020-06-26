@@ -133,6 +133,7 @@ void renderRoom()
     // GROUND
     // Load the ground as QUADS and apply the textures given a defined vertices
     glBegin(GL_QUADS);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glTexCoord2f(1.0f, 1.0f);
     glVertex3f(100.0f, 0.0f, 100.0f);
     glTexCoord2f(0.0f, 1.0f);
