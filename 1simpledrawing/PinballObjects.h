@@ -1,7 +1,62 @@
 #pragma once
 #include <iostream>
+#include <vector>
+#include <string>
+
 #include <stdlib.h>
-#include "Engine.h"
+#include "globals.h"
+
+using namespace physx;
+using namespace std;
+
+class Actor {
+private:
+	PxActor* actor;
+
+public:
+	// Constructor and destructor
+	Actor();
+	~Actor();
+
+	// Getter and Setters
+
+	PxActor* Get();
+
+	void Name(const string& name);
+	string Name();
+
+	void Color(PxVec3 color);
+	PxVec3* Color();
+
+	void Material();
+	void CreateShape();
+};
+
+
+///
+/// Inherits the actor properties to create a new actor with static parameters
+///
+class StaticActor : public Actor {
+public:
+	StaticActor(const PxTransform& pose);
+	~StaticActor();
+
+	void CreateShape(const PxGeometry& geometry);
+};
+
+
+///
+/// Inherits the actor properties to create a new actor with Dynamic parameters
+///
+class DynamicActor : public Actor {
+public:
+	DynamicActor();
+	~DynamicActor();
+
+	void CreateShape(const PxGeometry& geometry);
+	void SetKinematic(bool value);
+};
+
 
 ///
 /// Creates a new Plane
@@ -13,10 +68,13 @@ public:
 		: StaticActor(PxTransformFromPlaneEquation( PxPlane(planeEquation, distance ) )) {
 		CreateShape(PxPlaneGeometry());
 	}
+
+	Plane();
+
 };
 
 
-class Lever {
+class Paddle {
 
 };
 

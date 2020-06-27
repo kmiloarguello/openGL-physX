@@ -12,6 +12,9 @@ using namespace physx;
 
 static PxVec3 gVertexBuffer[MAX_NUM_MESH_VEC3S];
 
+// RENDER Variables
+Render* render = nullptr;
+
 // PhysX Variables
 PxDefaultAllocator      gAllocator;
 PxDefaultErrorCallback  gErrorCallback;
@@ -47,8 +50,6 @@ float tx = 0.0, ty = 0.0;
 // Texture variables
 unsigned int _id;
 
-// RENDER Variables
-Render* render = NULL;
 
 // INIT FUNCTIONS
 void initPhysics();
@@ -121,7 +122,6 @@ void renderRoom()
 // DISPLAY ELEMENTS IN SCENE
 void display()
 {    
-    //gScene->Get();
     stepPhysics();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -162,7 +162,7 @@ void reshape(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(65.0, (GLfloat)w / (GLfloat)h, 1.0, 500.0);
-    gluLookAt(0.0, 200.0, -100.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    gluLookAt(0.0,200.0, -100.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -3.0);
@@ -235,12 +235,6 @@ void keyboard(unsigned char key, int x, int y)
 
 void initPhysics()
 {
-    //GetFoundation();
-    //GetPvd();
-    //GetCooking();
-    //gPhysics = GetPhysX();
-    //gScene = Start();
-
     cout << "Initializing PhysX" << endl;
 
     // Initialization of PhysX
@@ -268,7 +262,6 @@ void initPhysics()
     {
         cout << "PxCreateCooking failed!" << endl;
     }
-
 
 
     // Here the library initialize the Physics with some tolerance (this can be updated) 
@@ -348,27 +341,74 @@ void initPhysics()
     /////////////////////////////////////////////////////
 
     // Obstacle 1
-    PxRigidDynamic* obstacle1 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 10.0f, 70.0f)), PxBoxGeometry(10.0f,10.0f,10.0f), *gMaterial, 1.0f);
+    PxRigidDynamic* obstacle1 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 10.0f, 70.0f)), PxBoxGeometry(10.0f, 10.0f, 10.0f), *gMaterial, 1.0f);
     //obstacle1->addForce(PxVec3(0.0f, 0.0f, 5.0f), PxForceMode::eIMPULSE);
     obstacle1->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
     obstacle1->setMass(0.f);
     obstacle1->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
     gScene->addActor(*obstacle1);
-    
 
+
+    // Obstacle 2
+    PxVec3 convexVerts[] = {
+        PxVec3(0,30,0),
+        PxVec3(30,0,0),
+        PxVec3(-30,0,0),
+        PxVec3(0,0,30),
+        PxVec3(0,0,-30)
+    };
+
+ 
+    //PxRigidDynamic* obstacle2 = render->createConvexMesh(convexVerts, 5, *gPhysics, PxVec3(-50.0f, 5.0f, 0.0f), *gMaterial2);
+    
+    PxConvexMeshDesc convexDesc;
+    convexDesc.points.count = 5;
+    convexDesc.points.stride = sizeof(PxVec3);
+    convexDesc.points.data = convexVerts;
+    convexDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
+
+    PxDefaultMemoryOutputStream buf;
+    PxConvexMeshCookingResult::Enum result;
+
+    if (!mCooking->cookConvexMesh(convexDesc, buf, &result)) {
+        cout << "ERROR NULL" << endl;
+    }
+
+    PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
+    PxConvexMesh* convexMesh = gPhysics->createConvexMesh(input);
+    PxRigidDynamic* aConvexActor = gPhysics->createRigidDynamic(PxTransform(PxVec3(-50.0f, .1f, 0.0f)));
+    PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor, PxConvexMeshGeometry(convexMesh), *gMaterial);
+    aConvexActor->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+    aConvexActor->setMass(0.f);
+    aConvexActor->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
+    gScene->addActor(*aConvexActor);
+    
+    
+    //gScene->addActor(*obstacle2);
+
+    // Obstacle 3
+    /*PxVec3 convexVerts2[] = {
+        PxVec3(0,20,0),
+        PxVec3(10,0,0),
+        PxVec3(-10,0,0),
+        PxVec3(0,0,10),
+        PxVec3(0,0,-10)
+    };
+    PxRigidDynamic* obstacle3 = render->createAConvexHull(*gPhysics, convexVerts2, 5, PxVec3(-50.0f, 5.0f, 0.0f), *gMaterial);
+    gScene->addActor(*obstacle3);
+    */
     /////////////////////////////////////////////////////
     /// ----------- END OBSTACLES  ------------------- //
     /////////////////////////////////////////////////////
 
     // ------------------------------------------------------------------------------------------------
-
     /////////////////////////////////////////////////////
     /// ----------------- BALL  ---------------------- //
     /////////////////////////////////////////////////////
 
     PxRigidDynamic* ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 5.0f, 0.0f)), PxSphereGeometry(3.0), *gMaterial, 1.0f);
     ball->setLinearDamping(0.05f);
-    ball->setLinearVelocity(PxVec3(0, 0, 30));
+    ball->setLinearVelocity(PxVec3(-40, 0, 80));
     gScene->addActor(*ball);
   
     /////////////////////////////////////////////////////

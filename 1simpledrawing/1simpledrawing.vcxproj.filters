@@ -26,9 +26,6 @@
     <ClCompile Include="PinballESIEE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Render.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -53,9 +50,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="PinballObjects.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Render.h">

@@ -3,6 +3,10 @@
 // @description: This file contains all the instructions for the render and camera settings
 
 #include "Render.h"
+#include <stdlib.h>
+#include <iostream>
+
+using namespace std;
 
 static PxVec3 gVertexBuffer[MAX_NUM_MESH_VEC3S];
 
@@ -288,3 +292,24 @@ void Render::renderGeometry(const PxGeometry& geom)
     }
 }
 
+// RENDER A CONVEX HULL
+PxRigidDynamic* Render::createConvexMesh(PxVec3* verts, PxU32 numVerts, PxPhysics& physics, PxVec3& position, PxMaterial& material)
+{
+    // Create descriptor for convex mesh
+    PxConvexMeshDesc convexDesc;
+    convexDesc.points.count = numVerts;
+    convexDesc.points.stride = sizeof(PxVec3);
+    convexDesc.points.data = verts;
+    convexDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
+
+    PxConvexMesh* convexMesh = NULL;
+    PxDefaultMemoryOutputStream buf;
+    PxConvexMeshCookingResult::Enum result;
+
+    PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
+    convexMesh = physics.createConvexMesh(input);
+
+    PxRigidDynamic* aConvexActor = physics.createRigidDynamic(PxTransform(position));
+    PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor, PxConvexMeshGeometry(convexMesh), material);
+    return aConvexActor;
+}

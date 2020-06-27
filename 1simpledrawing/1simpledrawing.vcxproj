@@ -161,7 +161,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="1simpledrawing.cpp" />
-    <ClCompile Include="Engine.cpp" />
     <ClCompile Include="ImageLoader.cpp" />
     <ClCompile Include="PinballESIEE.cpp" />
     <ClCompile Include="Render.cpp" />
@@ -171,7 +170,6 @@
     <None Include="basic-vertexshader.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Engine.h" />
     <ClInclude Include="globals.h" />
     <ClInclude Include="ImageLoader.h" />
     <ClInclude Include="PinballESIEE.h" />
