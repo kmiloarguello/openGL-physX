@@ -122,7 +122,7 @@ void renderRoom()
 
 // DISPLAY ELEMENTS IN SCENE
 void display()
-{    
+{
     stepPhysics();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -146,8 +146,10 @@ void display()
                           reinterpret_cast<PxActor**>(&actors[0]), nbActors);
         render->renderActors(&actors[0], static_cast<PxU32>(actors.size()), true, color);
 
-        if (ball->getGlobalPose().p[1] > 5) {
-            ball->setGlobalPose(PxTransform(PxVec3(ball->getGlobalPose().p[0], 3 ,ball->getGlobalPose().p[2]) ));
+        if (ball->getGlobalPose().p[1] > 5)
+        {
+            ball->setGlobalPose(PxTransform(PxVec3(ball->getGlobalPose().p[0], 3,
+                                                   ball->getGlobalPose().p[2]) ));
         }
     }
 
@@ -167,7 +169,7 @@ void reshape(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(65.0, (GLfloat)w / (GLfloat)h, 1.0, 500.0);
-    gluLookAt(0.0,200.0, -100.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    gluLookAt(0.0, 200.0, -100.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -3.0);
@@ -238,7 +240,8 @@ void keyboard(unsigned char key, int x, int y)
 /// --------------------------------------------------------------------
 
 
-PxRigidDynamic* createConvexHull(PxVec3* verts, PxU32 numVerts, PxVec3 position) {
+PxRigidDynamic* createConvexHull(PxVec3* verts, PxU32 numVerts, PxVec3 position)
+{
 
     PxConvexMeshDesc convexDesc;
     convexDesc.points.count = numVerts;
@@ -249,15 +252,17 @@ PxRigidDynamic* createConvexHull(PxVec3* verts, PxU32 numVerts, PxVec3 position)
     PxDefaultMemoryOutputStream buf;
     PxConvexMeshCookingResult::Enum result;
 
-    if (!mCooking->cookConvexMesh(convexDesc, buf, &result)) {
+    if (!mCooking->cookConvexMesh(convexDesc, buf, &result))
+    {
         cout << "ERROR NULL" << endl;
     }
 
     PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
     PxConvexMesh* convexMesh = gPhysics->createConvexMesh(input);
     PxRigidDynamic* aConvexActor = gPhysics->createRigidDynamic(PxTransform(position));
-    PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor, PxConvexMeshGeometry(convexMesh), *gMaterial);
-    
+    PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor,
+                            PxConvexMeshGeometry(convexMesh), *gMaterial);
+
     return aConvexActor;
 }
 
@@ -293,7 +298,7 @@ void initPhysics()
     }
 
 
-    // Here the library initialize the Physics with some tolerance (this can be updated) 
+    // Here the library initialize the Physics with some tolerance (this can be updated)
     // ? The tolerance is in animation, maybe gravity, etc
     // This PxCreatePhysics does not have Articulations nor Height fields
     gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(), true, gPvd);
@@ -324,7 +329,6 @@ void initPhysics()
         pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
     }
 
-
     // The material allows us to define the friction for the objects
     // We define the friction for the two elements and the restitution
     // The friction for dynamic elements should be around .1f and the restitution 1.2f
@@ -345,25 +349,38 @@ void initPhysics()
     /////////////////////////////////////////////////////
     /// ----------------- WALLS ---------------------- //
     /////////////////////////////////////////////////////
+
+    //ARRANGED IN A CLOCKWISE ORDER
+
+    //length(x-axis, z-axis, y-axis)
+    //position(x-axis, z-axis, y-axis)
+    //TOP WALL
     PxShape* wall1Shape = gPhysics->createShape(PxBoxGeometry( 100.0f, 10.0f, 2.0f), *gMaterial);
     PxRigidStatic* wall1 = gPhysics->createRigidStatic(PxTransform(PxVec3( 0.0f, 10.0f, 100.0f )));
     wall1->attachShape(*wall1Shape);
     gScene->addActor(*wall1);
 
+    //RIGHT WALL
+    PxShape* wall4Shape = gPhysics->createShape(PxBoxGeometry(2.0f, 10.0f, 100.0f), *gMaterial);
+    PxRigidStatic* wall4 = gPhysics->createRigidStatic(PxTransform(PxVec3(-100.0f, 10.0f, 0.0f)));
+    wall4->attachShape(*wall4Shape);
+    gScene->addActor(*wall4);
+
+    //BOTTOM WALL
     PxShape* wall2Shape = gPhysics->createShape(PxBoxGeometry(100.0f, 10.0f, 2.0f), *gMaterial);
     PxRigidStatic* wall2 = gPhysics->createRigidStatic(PxTransform(PxVec3(0.0f, 10.0f, -100.0f)));
     wall2->attachShape(*wall2Shape);
     gScene->addActor(*wall2);
 
+    //LEFT WALL
     PxShape* wall3Shape = gPhysics->createShape(PxBoxGeometry(2.0f, 10.0f, 100.0f), *gMaterial);
     PxRigidStatic* wall3 = gPhysics->createRigidStatic(PxTransform(PxVec3(100.0f, 10.0f, 0.0f)));
     wall3->attachShape(*wall3Shape);
     gScene->addActor(*wall3);
 
-    PxShape* wall4Shape = gPhysics->createShape(PxBoxGeometry(2.0f, 10.0f, 100.0f), *gMaterial);
-    PxRigidStatic* wall4 = gPhysics->createRigidStatic(PxTransform(PxVec3(-100.0f, 10.0f, 0.0f)));
-    wall4->attachShape(*wall4Shape);
-    gScene->addActor(*wall4);
+
+
+
     /////////////////////////////////////////////////////
     /// ----------------- END WALLS ------------------ //
     /////////////////////////////////////////////////////
@@ -375,134 +392,140 @@ void initPhysics()
     /////////////////////////////////////////////////////
 
     // Obstacle 1
-    PxRigidDynamic* obstacle1 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 10.0f, 70.0f)), PxBoxGeometry(10.0f,10.0f,10.0f), *gMaterial, 1.0f);
+    PxRigidDynamic* obstacle1 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 10.0f, 70.0f)),
+                                                PxBoxGeometry(10.0f, 10.0f, 10.0f), *gMaterial, 1.0f);
     obstacle1->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
     obstacle1->setMass(0.f);
     obstacle1->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
     gScene->addActor(*obstacle1);
 
     // Obstacle 2
-    PxVec3 convexVerts[] = {
-        PxVec3(0,30,0),
-        PxVec3(30,0,0),
-        PxVec3(-30,0,0),
-        PxVec3(0,0,30),
-        PxVec3(0,0,-30)
+    PxVec3 convexVerts[] =
+    {
+        PxVec3(0, 30, 0),
+        PxVec3(30, 0, 0),
+        PxVec3(-30, 0, 0),
+        PxVec3(0, 0, 30),
+        PxVec3(0, 0, -30)
     };
 
-    PxRigidDynamic* obstacle2 = createConvexHull(convexVerts, 5, PxVec3(-50.f,0.1f,0.f) );
+    PxRigidDynamic* obstacle2 = createConvexHull(convexVerts, 5, PxVec3(-50.f, 0.1f, 0.f) );
     //obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-   // obstacle2->setMass(0.f);
-   // obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
+    // obstacle2->setMass(0.f);
+    // obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
     obstacle2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*obstacle2);
 
 
 
     // Obstacle 3
-    /*PxVec3 convexVerts2[] = {
+    /*  PxVec3 convexVerts2[] = {
         PxVec3(0,20,0),
         PxVec3(10,0,0),
         PxVec3(-10,0,0),
         PxVec3(0,0,10),
         PxVec3(0,0,-10)
-    };
-    PxRigidDynamic* obstacle3 = render->createAConvexHull(*gPhysics, convexVerts2, 5, PxVec3(-50.0f, 5.0f, 0.0f), *gMaterial);
-    gScene->addActor(*obstacle3);
+        };
+        PxRigidDynamic* obstacle3 = render->createAConvexHull(*gPhysics, convexVerts2, 5, PxVec3(-50.0f, 5.0f, 0.0f), *gMaterial);
+        gScene->addActor(*obstacle3);
 
-    PxRigidDynamic* obstacle2 = createConvexHull(convexVerts, 5, PxVec3(-50.f,0.1f,0.f) );
-    obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-    obstacle2->setMass(0.f);
-    obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
-    gScene->addActor(*obstacle2);
+        PxRigidDynamic* obstacle2 = createConvexHull(convexVerts, 5, PxVec3(-50.f,0.1f,0.f) );
+        obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+        obstacle2->setMass(0.f);
+        obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
+        gScene->addActor(*obstacle2);
     */
-    
+
     /////////////////////////////////////////////////////
     /// ----------- END OBSTACLES  ------------------- //
     /////////////////////////////////////////////////////
 
     // ------------------------------------------------------------------------------------------------
-    
+
     /////////////////////////////////////////////////////
     /// ---------------- PADDLES  -------------------- //
     /////////////////////////////////////////////////////
-    
+
     // Paddle - Left
-    PxVec3 meshPaddleLeft[] = {
-        // SIDE 1
+    PxVec3 meshPaddleLeft[] =
+    {
+        //VERTEXES ARE IN CLOCKSWISE ORDER STARTING FROM THE BACK TO THE FRONT
+
+        // BACK-SIDE
         // BACK LEFT TOP
-        PxVec3(50,10,10),
-        // BACK LEFT BOTTOM
-        PxVec3(50,0,10),
+        PxVec3(50, 10, 10),
         // BACK RIGHT TOP
-        PxVec3(0,10,6),
+        PxVec3(0, 10, 6),
         // BACK RIGHT BOTTOM
-        PxVec3(0,0,6),
+        PxVec3(0, 0, 6),
+        // BACK LEFT BOTTOM
+        PxVec3(50, 0, 10),
 
-        // SIDE 2
-        // FRONT RIGHT TOP
-        PxVec3(0,10,4),
-        // FRONT RIGHT BOTTOM
-        PxVec3(0,0,4),
-
-        // SIDE 3
-        // FRONT LEFT TOP
-        PxVec3(50,10,0),
+        // FRONT-SIDE   --connecting the back to the front here
         // FRONT LEFT BOTTOM
-        PxVec3(50,0,0)
+        PxVec3(50, 0, 0),
+        // FRONT LEFT TOP
+        PxVec3(50, 10, 0),
+        // FRONT RIGHT TOP
+        PxVec3(0, 10, 4),
+        // FRONT RIGHT BOTTOM
+        PxVec3(0, 0, 4)
     };
 
-    PxRigidDynamic* paddleLeft = createConvexHull(meshPaddleLeft, 8, PxVec3( 10.f, 0.1f, -80.f));
+    //position(x-axis, z-axis, y-axis)
+    PxRigidDynamic* paddleLeft = createConvexHull(meshPaddleLeft, 8, PxVec3( 10.f, .1f, -80.f));
     paddleLeft->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*paddleLeft);
 
     // Paddle - Right
-    PxVec3 meshPaddleRight[] = {
-        // SIDE 1
+    PxVec3 meshPaddleRight[] =
+    {
+        //VERTEXES ARE IN CLOCKSWISE ORDER STARTING FROM THE BACK TO THE FRONT
+
+        // BACK-SIDE
         // BACK LEFT TOP
-        PxVec3(50,10,6),
-        // BACK LEFT BOTTOM
-        PxVec3(50,0,6),
+        PxVec3(50, 10, 6),
         // BACK RIGHT TOP
-        PxVec3(0,10,10),
+        PxVec3(0, 10, 10),
         // BACK RIGHT BOTTOM
-        PxVec3(0,0,10),
+        PxVec3(0, 0, 10),
+        // BACK LEFT BOTTOM
+        PxVec3(50, 0, 6),
 
-        // SIDE 2
-        // FRONT RIGHT TOP
-        PxVec3(0,10,0),
-        // FRONT RIGHT BOTTOM
-        PxVec3(0,0,0),
-
-        // SIDE 3
-        // FRONT LEFT TOP
-        PxVec3(50,10,4),
+        // FRONT-SIDE
         // FRONT LEFT BOTTOM
-        PxVec3(50,0,4)
+        PxVec3(50, 0, 4),
+        // FRONT LEFT TOP
+        PxVec3(50, 10, 4),
+        // FRONT RIGHT TOP
+        PxVec3(0, 10, 0),
+        // FRONT RIGHT BOTTOM
+        PxVec3(0, 0, 0)
     };
 
     PxRigidDynamic* paddleRight = createConvexHull(meshPaddleRight, 8, PxVec3(-60.f, 0.1f, -80.f));
     paddleRight->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*paddleRight);
-    
+
     /////////////////////////////////////////////////////
     /// -------------- END PADDLES  ------------------ //
     /////////////////////////////////////////////////////
-    
+
     // ------------------------------------------------------------------------------------------------
 
     /////////////////////////////////////////////////////
     /// ----------------- BALL  ---------------------- //
     /////////////////////////////////////////////////////
 
-    ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 0.0f, 0.0f)), PxSphereGeometry(3.0), *gMaterial, 1.0f);
+    ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 0.0f, 0.0f)), PxSphereGeometry(3.0),
+                           *gMaterial, 1.0f);
     ball->setLinearDamping(0.005f);
     ball->setLinearVelocity(PxVec3(-40, 0, 80));
     //ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, .5f));
     //ball->addForce(PxVec3(0.f,1000.f,0.f), PxForceMode::eACCELERATION);
     ball->setMass(1000.f);
     gScene->addActor(*ball);
-  
+
     /////////////////////////////////////////////////////
     /// ----------------- BALL  ---------------------- //
     /////////////////////////////////////////////////////
@@ -589,6 +612,7 @@ int main(int argc, char** argv)
 
     // TODO: Improve the textures - Add one texture for each object
     loadTextures("./assets/images/scenary.bmp");
+
     //loadTextures("./assets/images/scenary.bmp");
 
     glutDisplayFunc(display);
