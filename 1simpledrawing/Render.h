@@ -18,6 +18,7 @@ public:
 	void renderActors(PxRigidActor** actors, const PxU32 numActors, bool shadows, const PxVec3& color);
 	PX_FORCE_INLINE void renderGeometryHolder(const PxGeometryHolder& h);
 	void renderGeometry(const PxGeometry& geom);
-	PxRigidDynamic* createConvexMesh(PxVec3* verts, PxU32 numVerts, PxPhysics& physics, PxVec3& position, PxMaterial& material);
+	PxRigidDynamic* createConvexMesh(PxPhysics& physics, PxVec3* verts, PxU32 numVerts, PxVec3& position, PxMaterial& material);
+	PxConvexMesh* createConvexMesh2(PxPhysics& physics, PxVec3* verts, PxU32 numVerts);
 };
 

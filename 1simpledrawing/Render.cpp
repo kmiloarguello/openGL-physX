@@ -293,7 +293,7 @@ void Render::renderGeometry(const PxGeometry& geom)
 }
 
 // RENDER A CONVEX HULL
-PxRigidDynamic* Render::createConvexMesh(PxVec3* verts, PxU32 numVerts, PxPhysics& physics, PxVec3& position, PxMaterial& material)
+PxRigidDynamic* Render::createConvexMesh(PxPhysics& physics, PxVec3* verts, PxU32 numVerts, PxVec3& position, PxMaterial& material)
 {
     // Create descriptor for convex mesh
     PxConvexMeshDesc convexDesc;
@@ -312,4 +312,23 @@ PxRigidDynamic* Render::createConvexMesh(PxVec3* verts, PxU32 numVerts, PxPhysic
     PxRigidDynamic* aConvexActor = physics.createRigidDynamic(PxTransform(position));
     PxShape* aConvexShape = PxRigidActorExt::createExclusiveShape(*aConvexActor, PxConvexMeshGeometry(convexMesh), material);
     return aConvexActor;
+}
+
+PxConvexMesh* Render::createConvexMesh2(PxPhysics& physics, PxVec3* verts, PxU32 numVerts)
+{
+    // Create descriptor for convex mesh
+    PxConvexMeshDesc convexDesc;
+    convexDesc.points.count = numVerts;
+    convexDesc.points.stride = sizeof(PxVec3);
+    convexDesc.points.data = verts;
+    convexDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
+
+    PxConvexMesh* convexMesh = NULL;
+    PxDefaultMemoryOutputStream buf;
+    PxConvexMeshCookingResult::Enum result;
+
+    PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
+    convexMesh = physics.createConvexMesh(input);
+
+    return convexMesh;
 }
