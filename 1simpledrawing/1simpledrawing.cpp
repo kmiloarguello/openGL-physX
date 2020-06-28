@@ -324,8 +324,13 @@ void initPhysics()
         pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
     }
 
-    gMaterial = gPhysics->createMaterial(0.0f, 0.0f, 1.0f);
-    gMaterial2 = gPhysics->createMaterial(20.0f, 0.1f, 1.0f);
+
+    // The material allows us to define the friction for the objects
+    // We define the friction for the two elements and the restitution
+    // The friction for dynamic elements should be around .1f and the restitution 1.2f
+    // This allows us to have a board with less friction between the ball and the ground
+    gMaterial = gPhysics->createMaterial(0.0f, 0.1f, 1.2f);
+    gMaterial2 = gPhysics->createMaterial(0.0f, 0.1f, 1.2f);
 
     // BASE -> Actor -> RigidBody
     // PxRigidStatic simulates a rigid body object
@@ -386,9 +391,10 @@ void initPhysics()
     };
 
     PxRigidDynamic* obstacle2 = createConvexHull(convexVerts, 5, PxVec3(-50.f,0.1f,0.f) );
-    obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-    obstacle2->setMass(0.f);
-    obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
+    //obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+   // obstacle2->setMass(0.f);
+   // obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
+    obstacle2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*obstacle2);
 
 
@@ -416,6 +422,51 @@ void initPhysics()
     /////////////////////////////////////////////////////
 
     // ------------------------------------------------------------------------------------------------
+    
+    /////////////////////////////////////////////////////
+    /// ---------------- PADDLES  -------------------- //
+    /////////////////////////////////////////////////////
+    
+    
+    
+    // Obstacle 2
+    PxVec3 meshPaddle[] = {
+        // SIDE 1
+        // BACK LEFT TOP
+        PxVec3(50,50,50),
+        // BACK LEFT BOTTOM
+        PxVec3(50,0,50),
+        // BACK RIGHT TOP
+        PxVec3(0,50,50),
+        // BACK RIGHT BOTTOM
+        PxVec3(0,0,50),
+
+        // SIDE 2
+        // FRONT RIGHT TOP
+        PxVec3(0,50,0),
+        // FRONT RIGHT BOTTOM
+        PxVec3(0,0,0),
+
+        // SIDE 3
+        // FRONT LEFT TOP
+        PxVec3(50,50,0),
+        // FRONT LEFT BOTTOM
+        PxVec3(50,0,0)
+    };
+
+    PxRigidDynamic* paddle = createConvexHull(meshPaddle, 8, PxVec3(50.f, 0.1f, 0.f));
+    //obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+   // obstacle2->setMass(0.f);
+   // obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
+    paddle->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    gScene->addActor(*paddle);
+    
+    /////////////////////////////////////////////////////
+    /// -------------- END PADDLES  ------------------ //
+    /////////////////////////////////////////////////////
+    
+    // ------------------------------------------------------------------------------------------------
+
     /////////////////////////////////////////////////////
     /// ----------------- BALL  ---------------------- //
     /////////////////////////////////////////////////////
