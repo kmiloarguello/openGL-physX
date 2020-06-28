@@ -145,8 +145,10 @@ void display()
         gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC,
                           reinterpret_cast<PxActor**>(&actors[0]), nbActors);
         render->renderActors(&actors[0], static_cast<PxU32>(actors.size()), true, color);
-        ball->addForce(PxVec3(0.f, -1000.f, 0.f), PxForceMode::eACCELERATION);
 
+        if (ball->getGlobalPose().p[1] > 5) {
+            ball->setGlobalPose(PxTransform(PxVec3(ball->getGlobalPose().p[0], 3 ,ball->getGlobalPose().p[2]) ));
+        }
     }
 
     glutSwapBuffers();
@@ -420,7 +422,7 @@ void initPhysics()
     /// ----------------- BALL  ---------------------- //
     /////////////////////////////////////////////////////
 
-    ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 5.0f, 0.0f)), PxSphereGeometry(3.0), *gMaterial, 1.0f);
+    ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 0.0f, 0.0f)), PxSphereGeometry(3.0), *gMaterial, 1.0f);
     ball->setLinearDamping(0.005f);
     ball->setLinearVelocity(PxVec3(-40, 0, 80));
     //ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, .5f));
