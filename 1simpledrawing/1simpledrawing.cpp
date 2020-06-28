@@ -32,7 +32,7 @@ PxMaterial* gMaterial2 = NULL;
 PxRigidDynamic* ball = NULL;
 
 vector<PxRigidActor*> boxes;
-
+PxRigidDynamic* gKinematics;
 // Camera variables
 glm::vec3 camera_eye = glm::vec3(0.0f, 0.0f, 2.0f);
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -370,13 +370,11 @@ void initPhysics()
     /////////////////////////////////////////////////////
 
     // Obstacle 1
-    PxRigidDynamic* obstacle1 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 10.0f, 70.0f)), PxBoxGeometry(10.0f, 10.0f, 10.0f), *gMaterial, 1.0f);
-    //obstacle1->addForce(PxVec3(0.0f, 0.0f, 5.0f), PxForceMode::eIMPULSE);
+    PxRigidDynamic* obstacle1 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 10.0f, 70.0f)), PxBoxGeometry(10.0f,10.0f,10.0f), *gMaterial, 1.0f);
     obstacle1->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
     obstacle1->setMass(0.f);
     obstacle1->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
     gScene->addActor(*obstacle1);
-
 
     // Obstacle 2
     PxVec3 convexVerts[] = {
@@ -433,10 +431,54 @@ void initPhysics()
     /////////////////////////////////////////////////////
     /// ----------------- BALL  ---------------------- //
     /////////////////////////////////////////////////////
+
+    // ------------------------------------------------------------------------------------------------
+
+    /////////////////////////////////////////////////////
+    /// ---------------- MOVINGBAR ------------------ ///
+    /////////////////////////////////////////////////////
+
+    const PxQuat rot = PxQuat(PxIdentity);
+
+    PxShape* shape = gPhysics->createShape(PxCapsuleGeometry(3.0f, 3.0f), *gMaterial);
+
+    PxTransform pose(PxVec3(0, 2.0f, -30.0f), rot);
+    PxRigidDynamic* body = gPhysics->createRigidDynamic(pose);
+    body->attachShape(*shape);
+    gScene->addActor(*body);
+    body->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    gKinematics = body;
+
+    /////////////////////////////////////////////////////
+    /// ---------------- MOVINGBAR ------------------ ///
+    /////////////////////////////////////////////////////
+
+}
+
+void updateKinematics(PxReal timeStep)
+{
+    PxTransform motion;
+    motion.q = PxQuat(PxIdentity);
+
+    static float gTime = 0.0f;
+    gTime += timeStep;
+
+    //Motion on X axis
+    //sinf(Period = velocity) * Amplitude;
+    const float xf = sinf(gTime * 0.5f) * 9.0f;
+    motion.p = PxVec3(xf, 2.0f, -30.0f);
+
+    PxRigidDynamic* kine = gKinematics;
+    kine->setKinematicTarget(motion);
+
 }
 
 void stepPhysics()
 {
+    const PxReal timeStep = 1.0f / 60.0f;
+
+    updateKinematics(timeStep);
+
     for (int i = 0; i < 10; i++)
     {
         gScene->simulate(1.0f / 200.0f);
