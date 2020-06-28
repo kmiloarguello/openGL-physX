@@ -1,13 +1,15 @@
-#pragma once
-/****
+// ESIEE Paris - E4 Summer project 2020
+// @filename: PinballESIEE.h
+// @description:	This file contains all the instructions and interactions for the Pinball
+//					by using a gameState manager to handle all the states for the Pinball.
+//					It calls also other classes such as the Render and the Engine for setup PhysX and OpenGL
 
-@author Group Project - OpenGL ESIEE
-
-****/
 
 #include <vector>
 #include <string>
-#include "globals.h";
+#include "globals.h"
+//#include "Engine.h"
+#include "PinballObjects.h"
 
 class PinballESIEE
 {
