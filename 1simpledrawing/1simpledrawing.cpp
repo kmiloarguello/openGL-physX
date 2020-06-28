@@ -427,39 +427,63 @@ void initPhysics()
     /// ---------------- PADDLES  -------------------- //
     /////////////////////////////////////////////////////
     
-    
-    
-    // Obstacle 2
-    PxVec3 meshPaddle[] = {
+    // Paddle - Left
+    PxVec3 meshPaddleLeft[] = {
         // SIDE 1
         // BACK LEFT TOP
-        PxVec3(50,50,50),
+        PxVec3(50,10,10),
         // BACK LEFT BOTTOM
-        PxVec3(50,0,50),
+        PxVec3(50,0,10),
         // BACK RIGHT TOP
-        PxVec3(0,50,50),
+        PxVec3(0,10,6),
         // BACK RIGHT BOTTOM
-        PxVec3(0,0,50),
+        PxVec3(0,0,6),
 
         // SIDE 2
         // FRONT RIGHT TOP
-        PxVec3(0,50,0),
+        PxVec3(0,10,4),
+        // FRONT RIGHT BOTTOM
+        PxVec3(0,0,4),
+
+        // SIDE 3
+        // FRONT LEFT TOP
+        PxVec3(50,10,0),
+        // FRONT LEFT BOTTOM
+        PxVec3(50,0,0)
+    };
+
+    PxRigidDynamic* paddleLeft = createConvexHull(meshPaddleLeft, 8, PxVec3( 10.f, 0.1f, -80.f));
+    paddleLeft->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    gScene->addActor(*paddleLeft);
+
+    // Paddle - Right
+    PxVec3 meshPaddleRight[] = {
+        // SIDE 1
+        // BACK LEFT TOP
+        PxVec3(50,10,6),
+        // BACK LEFT BOTTOM
+        PxVec3(50,0,6),
+        // BACK RIGHT TOP
+        PxVec3(0,10,10),
+        // BACK RIGHT BOTTOM
+        PxVec3(0,0,10),
+
+        // SIDE 2
+        // FRONT RIGHT TOP
+        PxVec3(0,10,0),
         // FRONT RIGHT BOTTOM
         PxVec3(0,0,0),
 
         // SIDE 3
         // FRONT LEFT TOP
-        PxVec3(50,50,0),
+        PxVec3(50,10,4),
         // FRONT LEFT BOTTOM
-        PxVec3(50,0,0)
+        PxVec3(50,0,4)
     };
 
-    PxRigidDynamic* paddle = createConvexHull(meshPaddle, 8, PxVec3(50.f, 0.1f, 0.f));
-    //obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-   // obstacle2->setMass(0.f);
-   // obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
-    paddle->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
-    gScene->addActor(*paddle);
+    PxRigidDynamic* paddleRight = createConvexHull(meshPaddleRight, 8, PxVec3(-60.f, 0.1f, -80.f));
+    paddleRight->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    gScene->addActor(*paddleRight);
     
     /////////////////////////////////////////////////////
     /// -------------- END PADDLES  ------------------ //
