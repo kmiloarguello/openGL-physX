@@ -367,6 +367,66 @@ void initPhysics()
     /////////////////////////////////////////////////////
     /// ----------------- END WALLS ------------------ //
     /////////////////////////////////////////////////////
+    
+    // ------------------------------------------------------------------------------------------------
+
+    /////////////////////////////////////////////////////
+    /// ------------------ BORDERS ------------------- //
+    /////////////////////////////////////////////////////
+
+    PxVec3 meshBorder1[] = {
+        
+        // TOP
+        PxVec3(10,0,0),
+        PxVec3(16,0,-2),
+        PxVec3(20,0,-10),
+        PxVec3(20,0,-20),
+        PxVec3(14,0,-32),
+        PxVec3(12,0,-32),
+        PxVec3(10,0,-22),
+        PxVec3(0,0,-18),
+        PxVec3(0,0,-10),        
+        
+        // BOTTOM
+        PxVec3(10,20,0),
+        PxVec3(16,20,-2),
+        PxVec3(20,20,-10),
+        PxVec3(20,20,-20),
+        PxVec3(14,20,-32),
+        PxVec3(12,20,-32),
+        PxVec3(10,20,-22),
+        PxVec3(0,20,-18),
+        PxVec3(0,20,-10)
+    };
+
+    PxRigidDynamic* Border1 = createConvexHull(meshBorder1, 18, PxVec3(50.f, 0.0f, 60.0f));
+    Border1->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    gScene->addActor(*Border1);
+
+
+    PxVec3 meshBorder2[] = {
+        
+        //TOP
+        PxVec3(98,0,-2),
+        PxVec3(98,0,-62),
+        PxVec3(78,0,-52),
+        PxVec3(78,0,-22),
+
+        //BOTTOM
+        PxVec3(78,20,-22),
+        PxVec3(78,20,-52),
+        PxVec3(98,20,-62),
+        PxVec3(98,20,-2),
+        
+    };
+
+    PxRigidDynamic* Border2 = createConvexHull(meshBorder2, 8, PxVec3(0.0f, 0.0f, 25.f));
+    Border2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    gScene->addActor(*Border2);
+
+    /////////////////////////////////////////////////////
+    /// ------------------ BORDERS ------------------- //
+    /////////////////////////////////////////////////////
 
     // ------------------------------------------------------------------------------------------------
 
@@ -416,6 +476,17 @@ void initPhysics()
     obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
     gScene->addActor(*obstacle2);
     */
+
+
+    /*float i;
+    for (i = 30; i > 3; i--)
+    {
+        PxRigidDynamic* obstacle4 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(i+66, 10.0f, 98.0f - i)), PxBoxGeometry(2.0f, 10.0f, i), *gMaterial, 1.0f);
+        obstacle4->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+        obstacle4->setMass(0.f);
+        obstacle4->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
+        gScene->addActor(*obstacle4);
+    }*/
     
     /////////////////////////////////////////////////////
     /// ----------- END OBSTACLES  ------------------- //
@@ -452,7 +523,7 @@ void initPhysics()
         PxVec3(50,0,0)
     };
 
-    PxRigidDynamic* paddleLeft = createConvexHull(meshPaddleLeft, 8, PxVec3( 10.f, 0.1f, -80.f));
+    PxRigidDynamic* paddleLeft = createConvexHull(meshPaddleLeft, 8, PxVec3(10.f, 0.1f, -80.f));
     paddleLeft->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*paddleLeft);
 
@@ -518,11 +589,11 @@ void initPhysics()
     PxShape* shape = gPhysics->createShape(PxCapsuleGeometry(3.0f, 3.0f), *gMaterial);
 
     PxTransform pose(PxVec3(0, 2.0f, -30.0f), rot);
-    PxRigidDynamic* body = gPhysics->createRigidDynamic(pose);
-    body->attachShape(*shape);
-    gScene->addActor(*body);
-    body->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
-    gKinematics = body;
+    PxRigidDynamic* bar = gPhysics->createRigidDynamic(pose);
+    bar->attachShape(*shape);
+    gScene->addActor(*bar);
+    bar->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    gKinematics = bar;
 
     /////////////////////////////////////////////////////
     /// ---------------- MOVINGBAR ------------------ ///
