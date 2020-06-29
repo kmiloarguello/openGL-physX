@@ -115,9 +115,7 @@ void renderRoom()
     glVertex3f(100.0f, 0.0f, -100.0f);
     glEnd();
 
-
     glDisable(GL_TEXTURE_2D);
-
 }
 
 // DISPLAY ELEMENTS IN SCENE
@@ -154,7 +152,6 @@ void display()
     }
 
     glutSwapBuffers();
-
 }
 
 void idleCallback()
@@ -355,31 +352,41 @@ void initPhysics()
     //length(x-axis, z-axis, y-axis)
     //position(x-axis, z-axis, y-axis)
     //TOP WALL
-    PxShape* wall1Shape = gPhysics->createShape(PxBoxGeometry( 100.0f, 10.0f, 2.0f), *gMaterial);
+    PxShape* wall1Shape = gPhysics->createShape(PxBoxGeometry( 102.0f, 10.0f, 2.0f), *gMaterial);
     PxRigidStatic* wall1 = gPhysics->createRigidStatic(PxTransform(PxVec3( 0.0f, 10.0f, 100.0f )));
     wall1->attachShape(*wall1Shape);
     gScene->addActor(*wall1);
 
     //RIGHT WALL
-    PxShape* wall4Shape = gPhysics->createShape(PxBoxGeometry(2.0f, 10.0f, 100.0f), *gMaterial);
+    PxShape* wall4Shape = gPhysics->createShape(PxBoxGeometry(2.0f, 10.0f, 102.0f), *gMaterial);
     PxRigidStatic* wall4 = gPhysics->createRigidStatic(PxTransform(PxVec3(-100.0f, 10.0f, 0.0f)));
     wall4->attachShape(*wall4Shape);
     gScene->addActor(*wall4);
 
     //BOTTOM WALL
-    PxShape* wall2Shape = gPhysics->createShape(PxBoxGeometry(100.0f, 10.0f, 2.0f), *gMaterial);
+    PxShape* wall2Shape = gPhysics->createShape(PxBoxGeometry(102.0f, 10.0f, 2.0f), *gMaterial);
     PxRigidStatic* wall2 = gPhysics->createRigidStatic(PxTransform(PxVec3(0.0f, 10.0f, -100.0f)));
     wall2->attachShape(*wall2Shape);
     gScene->addActor(*wall2);
 
     //LEFT WALL
-    PxShape* wall3Shape = gPhysics->createShape(PxBoxGeometry(2.0f, 10.0f, 100.0f), *gMaterial);
+    PxShape* wall3Shape = gPhysics->createShape(PxBoxGeometry(2.0f, 10.0f, 102.0f), *gMaterial);
     PxRigidStatic* wall3 = gPhysics->createRigidStatic(PxTransform(PxVec3(100.0f, 10.0f, 0.0f)));
     wall3->attachShape(*wall3Shape);
     gScene->addActor(*wall3);
 
 
+    //LEFT PADDLE WALL
+    PxShape* wall5Shape = gPhysics->createShape(PxBoxGeometry(21.0f, 10.0f, 2.0f), *gMaterial);
+    PxRigidStatic* wall5 = gPhysics->createRigidStatic(PxTransform(PxVec3(80.0f, 10.0f, -73.0f)));
+    wall5->attachShape(*wall5Shape);
+    gScene->addActor(*wall5);
 
+    //RIGHT PADDLE WALL
+    PxShape* wall6Shape = gPhysics->createShape(PxBoxGeometry(21.0f, 10.0f, 2.0f), *gMaterial);
+    PxRigidStatic* wall6 = gPhysics->createRigidStatic(PxTransform(PxVec3(-80.0f, 10.0f, -73.0f)));
+    wall6->attachShape(*wall6Shape);
+    gScene->addActor(*wall6);
 
     /////////////////////////////////////////////////////
     /// ----------------- END WALLS ------------------ //
@@ -477,6 +484,11 @@ void initPhysics()
     paddleLeft->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*paddleLeft);
 
+    //Create translation here
+
+
+    //------------end tranlsation here---------
+
     // Paddle - Right
     PxVec3 meshPaddleRight[] =
     {
@@ -492,7 +504,7 @@ void initPhysics()
         // BACK LEFT BOTTOM
         PxVec3(50, 0, 6),
 
-        // FRONT-SIDE
+        // FRONT-SIDE   --connecting the back to the front here
         // FRONT LEFT BOTTOM
         PxVec3(50, 0, 4),
         // FRONT LEFT TOP
@@ -506,6 +518,11 @@ void initPhysics()
     PxRigidDynamic* paddleRight = createConvexHull(meshPaddleRight, 8, PxVec3(-60.f, 0.1f, -80.f));
     paddleRight->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*paddleRight);
+
+    //create translatio here
+
+
+    //----------end translation------------
 
     /////////////////////////////////////////////////////
     /// -------------- END PADDLES  ------------------ //
