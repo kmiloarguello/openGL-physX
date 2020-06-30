@@ -163,6 +163,7 @@
     <ClCompile Include="..\Common\myShader.cpp" />
     <ClCompile Include="1simpledrawing.cpp" />
     <ClCompile Include="ImageLoader.cpp" />
+    <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="PinballESIEE.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +173,7 @@
   <ItemGroup>
     <ClInclude Include="globals.h" />
     <ClInclude Include="ImageLoader.h" />
+    <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="PinballESIEE.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

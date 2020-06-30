@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 #include <GL/glew.h>
 #include <GL/glut.h>
