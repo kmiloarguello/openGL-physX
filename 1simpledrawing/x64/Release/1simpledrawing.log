@@ -1,3 +1,5 @@
-﻿  1simpledrawing.cpp
+﻿  Render.cpp
+C:\Users\Sungjoo\Documents\openGL-physX\1simpledrawing\Render.cpp(311,37): warning C4101: 'result': unreferenced local variable
+C:\Users\Sungjoo\Documents\openGL-physX\1simpledrawing\Render.cpp(333,37): warning C4101: 'result': unreferenced local variable
   LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
   1simpledrawing.vcxproj -> C:\Users\Edison\Documents\CA\E4_project\Examples\opengl-teaching-v141\opengl-teaching-v141\x64\Release\1simpledrawing.exe

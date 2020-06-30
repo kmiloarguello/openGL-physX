@@ -160,11 +160,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\myShader.cpp" />
     <ClCompile Include="1simpledrawing.cpp" />
     <ClCompile Include="ImageLoader.cpp" />
     <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="PinballESIEE.cpp" />
+    <ClCompile Include="Render.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="basic-fragmentshader.glsl" />
@@ -175,6 +175,8 @@
     <ClInclude Include="ImageLoader.h" />
     <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="PinballESIEE.h" />
+    <ClInclude Include="PinballObjects.h" />
+    <ClInclude Include="Render.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

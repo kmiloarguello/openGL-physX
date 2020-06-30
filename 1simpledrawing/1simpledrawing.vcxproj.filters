@@ -20,16 +20,13 @@
     <ClCompile Include="1simpledrawing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\myShader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ImageLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PinballESIEE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ObjLoader.cpp">
+    <ClCompile Include="Render.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -42,8 +39,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ImageLoader.h" />
-    <ClInclude Include="PinballESIEE.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="globals.h">
       <Filter>Source Files</Filter>
@@ -58,9 +53,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Render.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ObjLoader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
