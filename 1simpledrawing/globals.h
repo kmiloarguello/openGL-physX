@@ -16,6 +16,7 @@
 #define GLM_FORCE_RADIANS
 #define PVD_HOST "127.0.0.1"
 #define MAX_NUM_ACTOR_SHAPES 128
+#define ALLOW_SHADOWS false
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtc/type_ptr.hpp>
