@@ -197,19 +197,25 @@ void reshape(int w, int h)
 
 /// Function to rotate the Paddles
 // It applies a force to the update the pose
-void triggerPaddle(PxRigidDynamic* paddle, PxRevoluteJoint* joint, float force) {
-    if (paddle->isSleeping()) {
+void triggerPaddle(PxRigidDynamic* paddle, PxRevoluteJoint* joint, float force)
+{
+    if (paddle->isSleeping())
+    {
         paddle->wakeUp();
     }
+
     joint->setDriveVelocity(force);
     joint->setRevoluteJointFlag(PxRevoluteJointFlag::eDRIVE_ENABLED, true);
 }
 
-void triggerPlunger(PxRigidDynamic* plunger, PxVec3 position) {
+void triggerPlunger(PxRigidDynamic* plunger, PxVec3 position)
+{
 
-    if (plunger->isSleeping()) {
+    if (plunger->isSleeping())
+    {
         plunger->wakeUp();
     }
+
     plunger->setKinematicTarget(PxTransform(position, PxQuat(PxHalfPi, PxVec3(0, 1, 0))));
 
 }
@@ -219,14 +225,16 @@ void KeyPress(unsigned char key, int x, int y)
 {
     switch (key)
     {
-    case 'd': 
+    case 'd':
         // Rotating the right paddle
-        triggerPaddle(paddleRight,jointPaddleRight,10.0f);
+        triggerPaddle(paddleRight, jointPaddleRight, 10.0f);
         break;
+
     case 'q':
         // Rotating the left paddle
         triggerPaddle(paddleLeft, jointPaddleLeft, 10.0f);
         break;
+
     case ' ':
         // Pulling the plunger
         triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -50.0f));
@@ -242,19 +250,22 @@ void KeyRelease(unsigned char key, int x, int y)
 {
     switch (key)
     {
-        //implement your own
+    //implement your own
     case 'd':
         // Returning to the original position - right paddle
         triggerPaddle(paddleRight, jointPaddleRight, -10.0f);
         break;
+
     case 'q':
         // Returning to the original position - left paddle
         triggerPaddle(paddleLeft, jointPaddleLeft, -10.0f);
         break;
+
     case ' ':
         // Returning the plunger
-        triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -28.0f));        
+        triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -28.0f));
         break;
+
     default:
         break;
     }
@@ -421,36 +432,37 @@ void initPhysics()
     /////////////////////////////////////////////////////
     /// ----------------- END WALLS ------------------ //
     /////////////////////////////////////////////////////
-    
+
     // ------------------------------------------------------------------------------------------------
 
     /////////////////////////////////////////////////////
     /// ------------------ BORDERS ------------------- //
     /////////////////////////////////////////////////////
 
-    PxVec3 meshBorder1[] = {
-        
+    PxVec3 meshBorder1[] =
+    {
+
         // TOP
-        PxVec3(10,0,0),
-        PxVec3(16,0,-2),
-        PxVec3(20,0,-10),
-        PxVec3(20,0,-20),
-        PxVec3(14,0,-32),
-        PxVec3(12,0,-32),
-        PxVec3(10,0,-22),
-        PxVec3(0,0,-18),
-        PxVec3(0,0,-10),        
-        
+        PxVec3(10, 0, 0),
+        PxVec3(16, 0, -2),
+        PxVec3(20, 0, -10),
+        PxVec3(20, 0, -20),
+        PxVec3(14, 0, -32),
+        PxVec3(12, 0, -32),
+        PxVec3(10, 0, -22),
+        PxVec3(0, 0, -18),
+        PxVec3(0, 0, -10),
+
         // BOTTOM
-        PxVec3(10,20,0),
-        PxVec3(16,20,-2),
-        PxVec3(20,20,-10),
-        PxVec3(20,20,-20),
-        PxVec3(14,20,-32),
-        PxVec3(12,20,-32),
-        PxVec3(10,20,-22),
-        PxVec3(0,20,-18),
-        PxVec3(0,20,-10)
+        PxVec3(10, 20, 0),
+        PxVec3(16, 20, -2),
+        PxVec3(20, 20, -10),
+        PxVec3(20, 20, -20),
+        PxVec3(14, 20, -32),
+        PxVec3(12, 20, -32),
+        PxVec3(10, 20, -22),
+        PxVec3(0, 20, -18),
+        PxVec3(0, 20, -10)
     };
 
     PxRigidDynamic* Border1 = createConvexHull(meshBorder1, 18, PxVec3(50.f, 0.0f, 60.0f));
@@ -458,20 +470,21 @@ void initPhysics()
     gScene->addActor(*Border1);
 
 
-    PxVec3 meshBorder2[] = {
-        
+    PxVec3 meshBorder2[] =
+    {
+
         //TOP
-        PxVec3(98,0,-2),
-        PxVec3(98,0,-62),
-        PxVec3(78,0,-52),
-        PxVec3(78,0,-22),
+        PxVec3(98, 0, -2),
+        PxVec3(98, 0, -62),
+        PxVec3(78, 0, -52),
+        PxVec3(78, 0, -22),
 
         //BOTTOM
-        PxVec3(78,20,-22),
-        PxVec3(78,20,-52),
-        PxVec3(98,20,-62),
-        PxVec3(98,20,-2),
-        
+        PxVec3(78, 20, -22),
+        PxVec3(78, 20, -52),
+        PxVec3(98, 20, -62),
+        PxVec3(98, 20, -2),
+
     };
 
     PxRigidDynamic* Border2 = createConvexHull(meshBorder2, 8, PxVec3(0.0f, 0.0f, 25.f));
@@ -533,15 +546,15 @@ void initPhysics()
         gScene->addActor(*obstacle2);
     */
 
-    /*float i;
-    for (i = 30; i > 3; i--)
-    {
+    /*  float i;
+        for (i = 30; i > 3; i--)
+        {
         PxRigidDynamic* obstacle4 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(i+66, 10.0f, 98.0f - i)), PxBoxGeometry(2.0f, 10.0f, i), *gMaterial, 1.0f);
         obstacle4->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
         obstacle4->setMass(0.f);
         obstacle4->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
         gScene->addActor(*obstacle4);
-    }*/
+        }*/
 
     // Obstacle 2
     PxVec3 convexVerts5[] =
@@ -550,14 +563,14 @@ void initPhysics()
         PxVec3(20, 0, 0),
         PxVec3(0, 0, -20),
         PxVec3(0, 5, 0),
-        PxVec3(20, 5, 0),        
+        PxVec3(20, 5, 0),
         PxVec3(0, 5, -20)
     };
 
     PxRigidDynamic* obstacle5 = createConvexHull(convexVerts5, 6, PxVec3(-100.f, 0.0f, 100.0f));
     obstacle5->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*obstacle5);
-    
+
     /////////////////////////////////////////////////////
     /// ----------- END OBSTACLES  ------------------- //
     /////////////////////////////////////////////////////
@@ -601,21 +614,22 @@ void initPhysics()
     // The global pose for right and left paddle are basically the same (check the vertices)
     // However to create the mirror effect, ther right paddle is multiplied by PI to switch the direction
     // This allows us to create the effect of paddle rotation on right and left side
-    paddleLeft->setGlobalPose( PxTransform( paddleLeft->getGlobalPose().p , paddleLeft->getGlobalPose().q * PxQuat(PxPi, PxVec3(0, -1, 0)))  );
+    paddleLeft->setGlobalPose( PxTransform( paddleLeft->getGlobalPose().p,
+                                            paddleLeft->getGlobalPose().q * PxQuat(PxPi, PxVec3(0, -1, 0)))  );
     gScene->addActor(*paddleLeft);
 
     //---------- translation------------
-  
+
     // The value for the rotation is PxPi (Positive)
     jointPaddleLeft = PxRevoluteJointCreate(
-        *gPhysics,
-        wall5,
-        PxTransform(
-            paddleLeft->getGlobalPose().p,
-            paddleLeft->getGlobalPose().q * PxQuat(PxPi / 2, PxVec3(0, 0, 1)) ),
-        paddleLeft,
-        PxTransform(PxVec3(0, 0, 0), PxQuat(PxPi / 2, PxVec3(0, 0, 1)))
-    );
+                          *gPhysics,
+                          wall5,
+                          PxTransform(
+                              paddleLeft->getGlobalPose().p,
+                              paddleLeft->getGlobalPose().q * PxQuat(PxPi / 2, PxVec3(0, 0, 1)) ),
+                          paddleLeft,
+                          PxTransform(PxVec3(0, 0, 0), PxQuat(PxPi / 2, PxVec3(0, 0, 1)))
+                      );
 
     jointPaddleLeft->setConstraintFlag(PxConstraintFlag::eVISUALIZATION, true);
     jointPaddleLeft->setLimit(PxJointAngularLimitPair(-PxPi / 16, PxPi / 6));
@@ -664,17 +678,17 @@ void initPhysics()
     // The rotation axis is defined on PxVec3 inside of PxQuad
 
     jointPaddleRight = PxRevoluteJointCreate(
-        *gPhysics,
-        wall6,
-        PxTransform(
-            paddleRight->getGlobalPose().p,
-            paddleRight->getGlobalPose().q * PxQuat(-PxPi / 2, PxVec3(0, 0, 1))),
-        paddleRight,
-        PxTransform(PxVec3(0, 0, 0), PxQuat(-PxPi / 2, PxVec3(0, 0, 1)))
-    );
+                           *gPhysics,
+                           wall6,
+                           PxTransform(
+                               paddleRight->getGlobalPose().p,
+                               paddleRight->getGlobalPose().q * PxQuat(-PxPi / 2, PxVec3(0, 0, 1))),
+                           paddleRight,
+                           PxTransform(PxVec3(0, 0, 0), PxQuat(-PxPi / 2, PxVec3(0, 0, 1)))
+                       );
 
     jointPaddleRight->setConstraintFlag(PxConstraintFlag::eVISUALIZATION, true);
-    jointPaddleRight->setLimit(PxJointAngularLimitPair(-PxPi/ 16, PxPi / 6));
+    jointPaddleRight->setLimit(PxJointAngularLimitPair(-PxPi / 16, PxPi / 6));
     jointPaddleRight->setRevoluteJointFlag(PxRevoluteJointFlag::eLIMIT_ENABLED, true);
 
 
@@ -705,7 +719,7 @@ void initPhysics()
 
 
     // ------------------------------------------------------------------------------------------------
-        /////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
     /// ----------------- PLUNGER ------------------- ///
     /////////////////////////////////////////////////////
 
@@ -723,7 +737,7 @@ void initPhysics()
     /////////////////////////////////////////////////////
     /// ----------------- PLUNGER ------------------- ///
     /////////////////////////////////////////////////////
-        // ------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------
 
 
     /////////////////////////////////////////////////////
@@ -731,15 +745,16 @@ void initPhysics()
     /////////////////////////////////////////////////////
 
 
-    PxRigidDynamic* bar = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(10.0f, 10.0f, 30.0f)), PxCapsuleGeometry(3.0f, 3.0f), *gMaterial, 1.0f);
+    PxRigidDynamic* bar = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(10.0f, 10.0f, 30.0f)),
+                                          PxCapsuleGeometry(3.0f, 3.0f), *gMaterial, 1.0f);
     gScene->addActor(*bar);
     bar->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gKinematics = bar;
 
     /////////////////////////////////////////////////////
     /// ---------------- MOVINGBAR ------------------ ///
-    /////////////////////////////////////////////////////    
-    
+    /////////////////////////////////////////////////////
+
     // ------------------------------------------------------------------------------------------------
 
 
@@ -803,7 +818,14 @@ int main(int argc, char** argv)
     init();
 
     // TODO: Improve the textures - Add one texture for each object
-    loadTextures("./assets/images/scenary.bmp");
+    loadTextures("./assets/images/synth_wave.bmp");
+
+    //loadTextures("./assets/images/more_synth.bmp");
+    //loadTextures("./assets/images/cyer_scraper.bmp");
+    //loadTextures("./assets/images/digi_punk.bmp");
+    //loadTextures("./assets/images/purple_liquid.bmp");
+    //loadTextures("./assets/images/synth_wave.bmp");
+
 
     //loadTextures("./assets/images/scenary.bmp");
 
