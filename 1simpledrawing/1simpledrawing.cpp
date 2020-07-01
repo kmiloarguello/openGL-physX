@@ -4,7 +4,6 @@
 
 #include "globals.h"
 #include "Render.h"
-//#include "Engine.h"
 #include "ImageLoader.h"
 
 using namespace std;
@@ -372,13 +371,13 @@ void initPhysics()
     // The friction for dynamic elements should be around .1f and the restitution 1.2f
     // This allows us to have a board with less friction between the ball and the ground
     gMaterial = gPhysics->createMaterial(0.0f, 0.1f, 1.2f);
-    gMaterial2 = gPhysics->createMaterial(0.0f, 0.1f, 1.2f);
+    gMaterial2 = gPhysics->createMaterial(0.0f, 0.5f, 1.4f);
 
     // BASE -> Actor -> RigidBody
     // PxRigidStatic simulates a rigid body object
     // PxCreatePlane is method to create planes of equation a.x + b = 0
     // PxPlane Normal Vector - Distance to the origin (last parameter)
-    PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0.0f, 1.0f, 0.0f, 0.0f), *gMaterial2);
+    PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0.0f, 1.0f, 0.0f, 0.0f), *gMaterial);
     gScene->addActor(*groundPlane);
     boxes.push_back(groundPlane);
 
@@ -520,9 +519,6 @@ void initPhysics()
     };
 
     PxRigidDynamic* obstacle2 = createConvexHull(convexVerts, 5, PxVec3(-50.f, 0.1f, 0.f));
-    //obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-    // obstacle2->setMass(0.f);
-    // obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
     obstacle2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*obstacle2);
 
@@ -607,7 +603,6 @@ void initPhysics()
         PxVec3(0, 0, 0)
     };
 
-    //position(x-axis, z-axis, y-axis)
     paddleLeft = createConvexHull(meshPaddleLeft, 8, PxVec3( 60.f, 0.1f, -65.f));
     paddleLeft->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
     paddleLeft->setMass(0.f);
@@ -804,7 +799,7 @@ void cleanupPhysics()
 {
     gPhysics->release();
     gFoundation->release();
-    printf("SnippetHelloWorld done.\n");
+    printf("Pinball done.\n");
 }
 
 
@@ -833,9 +828,6 @@ int main(int argc, char** argv)
     //loadTextures("./assets/images/cyer_scraper.bmp");
     //loadTextures("./assets/images/digi_punk.bmp");
     //loadTextures("./assets/images/purple_liquid.bmp");
-
-
-
     //loadTextures("./assets/images/scenary.bmp");
 
     glutDisplayFunc(display);
