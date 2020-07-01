@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "1simpledrawing", "1simpledrawing\1simpledrawing.vcxproj", "{7E6E8D7B-F60D-499D-AFB1-C90371CA61BB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "9silhouette", "9silhouette\9silhouette.vcxproj", "{D2BBC34E-C9D0-405C-A1E2-0F22C8342E72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -21,6 +23,14 @@ Global
 		{7E6E8D7B-F60D-499D-AFB1-C90371CA61BB}.Release|Win32.Build.0 = Release|Win32
 		{7E6E8D7B-F60D-499D-AFB1-C90371CA61BB}.Release|x64.ActiveCfg = Release|x64
 		{7E6E8D7B-F60D-499D-AFB1-C90371CA61BB}.Release|x64.Build.0 = Release|x64
+		{D2BBC34E-C9D0-405C-A1E2-0F22C8342E72}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D2BBC34E-C9D0-405C-A1E2-0F22C8342E72}.Debug|Win32.Build.0 = Debug|Win32
+		{D2BBC34E-C9D0-405C-A1E2-0F22C8342E72}.Debug|x64.ActiveCfg = Debug|x64
+		{D2BBC34E-C9D0-405C-A1E2-0F22C8342E72}.Debug|x64.Build.0 = Debug|x64
+		{D2BBC34E-C9D0-405C-A1E2-0F22C8342E72}.Release|Win32.ActiveCfg = Release|Win32
+		{D2BBC34E-C9D0-405C-A1E2-0F22C8342E72}.Release|Win32.Build.0 = Release|Win32
+		{D2BBC34E-C9D0-405C-A1E2-0F22C8342E72}.Release|x64.ActiveCfg = Release|x64
+		{D2BBC34E-C9D0-405C-A1E2-0F22C8342E72}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

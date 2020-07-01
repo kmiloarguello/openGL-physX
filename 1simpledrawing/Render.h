@@ -21,4 +21,3 @@ public:
 	PxRigidDynamic* createConvexMesh(PxPhysics& physics, PxVec3* verts, PxU32 numVerts, PxVec3& position, PxMaterial& material);
 	PxConvexMesh* createConvexMesh2(PxPhysics& physics, PxVec3* verts, PxU32 numVerts);
 };
-
