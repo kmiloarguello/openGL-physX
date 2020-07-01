@@ -45,6 +45,8 @@ PxRigidDynamic* paddleLeft = NULL;
 PxRigidStatic* wall5 = NULL;
 PxRevoluteJoint* jointPaddleLeft = NULL;
 
+PxRigidDynamic* gPlunger = NULL;
+
 
 // Camera variables
 glm::vec3 camera_eye = glm::vec3(0.0f, 0.0f, 2.0f);
@@ -203,6 +205,16 @@ void triggerPaddle(PxRigidDynamic* paddle, PxRevoluteJoint* joint, float force) 
     joint->setRevoluteJointFlag(PxRevoluteJointFlag::eDRIVE_ENABLED, true);
 }
 
+void triggerPlunger(PxRigidDynamic* plunger, PxVec3 position) {
+
+    if (plunger->isSleeping()) {
+        plunger->wakeUp();
+    }
+    plunger->setKinematicTarget(PxTransform(position, PxQuat(PxHalfPi, PxVec3(0, 1, 0))));
+
+}
+
+
 void KeyPress(unsigned char key, int x, int y)
 {
     switch (key)
@@ -214,6 +226,10 @@ void KeyPress(unsigned char key, int x, int y)
     case 'q':
         // Rotating the left paddle
         triggerPaddle(paddleLeft, jointPaddleLeft, 10.0f);
+        break;
+    case ' ':
+        // Pulling the plunger
+        triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -50.0f));
         break;
 
     default:
@@ -234,6 +250,10 @@ void KeyRelease(unsigned char key, int x, int y)
     case 'q':
         // Returning to the original position - left paddle
         triggerPaddle(paddleLeft, jointPaddleLeft, -10.0f);
+        break;
+    case ' ':
+        // Returning the plunger
+        triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -28.0f));        
         break;
     default:
         break;
@@ -486,7 +506,7 @@ void initPhysics()
         PxVec3(0, 0, -30)
     };
 
-    PxRigidDynamic* obstacle2 = createConvexHull(convexVerts, 5, PxVec3(-50.f, 0.1f, 0.f) );
+    PxRigidDynamic* obstacle2 = createConvexHull(convexVerts, 5, PxVec3(-50.f, 0.1f, 0.f));
     //obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
     // obstacle2->setMass(0.f);
     // obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
@@ -522,6 +542,21 @@ void initPhysics()
         obstacle4->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
         gScene->addActor(*obstacle4);
     }*/
+
+    // Obstacle 2
+    PxVec3 convexVerts5[] =
+    {
+        PxVec3(0, 0, 0),
+        PxVec3(20, 0, 0),
+        PxVec3(0, 0, -20),
+        PxVec3(0, 5, 0),
+        PxVec3(20, 5, 0),        
+        PxVec3(0, 5, -20)
+    };
+
+    PxRigidDynamic* obstacle5 = createConvexHull(convexVerts5, 6, PxVec3(-100.f, 0.0f, 100.0f));
+    obstacle5->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    gScene->addActor(*obstacle5);
     
     /////////////////////////////////////////////////////
     /// ----------- END OBSTACLES  ------------------- //
@@ -655,10 +690,10 @@ void initPhysics()
     /// ----------------- BALL  ---------------------- //
     /////////////////////////////////////////////////////
 
-    ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(0.0f, 0.0f, 0.0f)), PxSphereGeometry(3.0),
+    ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(-87.0f, 0.0f, -7.0f)), PxSphereGeometry(3.0f),
                            *gMaterial, 1.0f);
     ball->setLinearDamping(0.005f);
-    ball->setLinearVelocity(PxVec3(-40, 0, 80));
+    //ball->setLinearVelocity(PxVec3(-40, 0, 80));
     //ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, .5f));
     //ball->addForce(PxVec3(0.f,1000.f,0.f), PxForceMode::eACCELERATION);
     ball->setMass(1000.f);
@@ -668,26 +703,45 @@ void initPhysics()
     /// ----------------- BALL  ---------------------- //
     /////////////////////////////////////////////////////
 
+
     // ------------------------------------------------------------------------------------------------
+        /////////////////////////////////////////////////////
+    /// ----------------- PLUNGER ------------------- ///
+    /////////////////////////////////////////////////////
+
+    const PxQuat rot = PxQuat(PxQuat(PxHalfPi, PxVec3(0, 1, 0)));
+
+    PxShape* shape = gPhysics->createShape(PxCapsuleGeometry(5.0f, 15.0f), *gMaterial);
+
+    PxTransform pose(PxVec3(-87.0f, 5.0f, -30.0f), rot);
+    PxRigidDynamic* plunger = gPhysics->createRigidDynamic(pose);
+    plunger->attachShape(*shape);
+    gScene->addActor(*plunger);
+    plunger->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    gPlunger = plunger;
+
+    /////////////////////////////////////////////////////
+    /// ----------------- PLUNGER ------------------- ///
+    /////////////////////////////////////////////////////
+        // ------------------------------------------------------------------------------------------------
+
 
     /////////////////////////////////////////////////////
     /// ---------------- MOVINGBAR ------------------ ///
     /////////////////////////////////////////////////////
 
-    const PxQuat rot = PxQuat(PxIdentity);
 
-    PxShape* shape = gPhysics->createShape(PxCapsuleGeometry(3.0f, 3.0f), *gMaterial);
-
-    PxTransform pose(PxVec3(0, 2.0f, -30.0f), rot);
-    PxRigidDynamic* bar = gPhysics->createRigidDynamic(pose);
-    bar->attachShape(*shape);
+    PxRigidDynamic* bar = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(10.0f, 10.0f, 30.0f)), PxCapsuleGeometry(3.0f, 3.0f), *gMaterial, 1.0f);
     gScene->addActor(*bar);
     bar->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gKinematics = bar;
 
     /////////////////////////////////////////////////////
     /// ---------------- MOVINGBAR ------------------ ///
-    /////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////    
+    
+    // ------------------------------------------------------------------------------------------------
+
 
 }
 
