@@ -28,6 +28,7 @@ PxDefaultCpuDispatcher* gDispatcher = NULL;
 PxScene* gScene = NULL;
 PxMaterial* gMaterial = NULL;
 PxMaterial* gMaterial2 = NULL;
+PxMaterial* gMaterialPaddles = NULL;
 PxRigidDynamic* ball = NULL;
 
 vector<PxRigidActor*> boxes;
@@ -36,16 +37,15 @@ PxRigidDynamic* gKinematics;
 // OBSTACLES
 //Global variables to rotate the paddles
 // Right paddle
-PxRigidDynamic* paddleRight = NULL;
+PxRigidDynamic* paddleRight2 = NULL;
 PxRigidStatic* wall6 = NULL;
 PxRevoluteJoint* jointPaddleRight = NULL;
 // Left paddle
-PxRigidDynamic* paddleLeft = NULL;
+PxRigidDynamic* paddleLeft2 = NULL;
 PxRigidStatic* wall5 = NULL;
 PxRevoluteJoint* jointPaddleLeft = NULL;
 
 PxRigidDynamic* gPlunger = NULL;
-
 
 // Camera variables
 glm::vec3 camera_eye = glm::vec3(0.0f, 0.0f, 2.0f);
@@ -158,11 +158,17 @@ void display()
                           reinterpret_cast<PxActor**>(&actors[0]), nbActors);
         render->renderActors(&actors[0], static_cast<PxU32>(actors.size()), ALLOW_SHADOWS, color);
 
+        // To indicate PhysX that the ball always must be below 5 units, 
+        // Prevent that the ball flies :v
         if (ball->getGlobalPose().p[1] > 5)
         {
             ball->setGlobalPose(PxTransform(PxVec3(ball->getGlobalPose().p[0], 3,
                                                    ball->getGlobalPose().p[2]) ));
         }
+
+        // Set a constant force to the ball in order to aim its direction towards the paddles
+        // This has to be made for each frame
+        ball->addForce(PxVec3(0.0f,0.0f,-10.0f), PxForceMode::eACCELERATION);
     }
 
     glutSwapBuffers();
@@ -226,12 +232,12 @@ void KeyPress(unsigned char key, int x, int y)
     {
     case 'd':
         // Rotating the right paddle
-        triggerPaddle(paddleRight, jointPaddleRight, 10.0f);
+        triggerPaddle(paddleRight2, jointPaddleRight, 10.0f);
         break;
 
     case 'q':
         // Rotating the left paddle
-        triggerPaddle(paddleLeft, jointPaddleLeft, 10.0f);
+        triggerPaddle(paddleLeft2, jointPaddleLeft, 10.0f);
         break;
 
     case ' ':
@@ -252,12 +258,12 @@ void KeyRelease(unsigned char key, int x, int y)
     //implement your own
     case 'd':
         // Returning to the original position - right paddle
-        triggerPaddle(paddleRight, jointPaddleRight, -10.0f);
+        triggerPaddle(paddleRight2, jointPaddleRight, -10.0f);
         break;
 
     case 'q':
         // Returning to the original position - left paddle
-        triggerPaddle(paddleLeft, jointPaddleLeft, -10.0f);
+        triggerPaddle(paddleLeft2, jointPaddleLeft, -10.0f);
         break;
 
     case ' ':
@@ -343,7 +349,7 @@ void initPhysics()
     // It is good to mention the simulation part and the time slots fetch()
 
     PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
-    sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
+    sceneDesc.gravity = PxVec3(0.0f, -9.81f, -2.0f);
 
     // For handling the Threads, PhysX uses a gDispatcher
     // GPU Optimization
@@ -366,12 +372,20 @@ void initPhysics()
         pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
     }
 
+    gScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0f);
+    gScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
+    gScene->setVisualizationParameter(PxVisualizationParameter::eBODY_LIN_VELOCITY, 1.0f);
+    gScene->setVisualizationParameter(PxVisualizationParameter::eBODY_AXES, 1.0f);
+    gScene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, 1.0f);
+    gScene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS, 1.0f);
+
     // The material allows us to define the friction for the objects
     // We define the friction for the two elements and the restitution
     // The friction for dynamic elements should be around .1f and the restitution 1.2f
     // This allows us to have a board with less friction between the ball and the ground
     gMaterial = gPhysics->createMaterial(0.0f, 0.1f, 1.2f);
     gMaterial2 = gPhysics->createMaterial(0.0f, 0.5f, 1.4f);
+    gMaterialPaddles = gPhysics->createMaterial(0.0f,0.3,1.2f);
 
     // BASE -> Actor -> RigidBody
     // PxRigidStatic simulates a rigid body object
@@ -578,40 +592,18 @@ void initPhysics()
     /////////////////////////////////////////////////////
 
     // Paddle - Left
-    PxVec3 meshPaddleLeft[] =
-    {
-        //VERTEXES ARE IN CLOCKSWISE ORDER STARTING FROM THE BACK TO THE FRONT
+    paddleLeft2 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(-43.f, .1f, 0.f)), PxBoxGeometry(25.0f, 10.0f, 3.0f), *gMaterialPaddles, 1.0f);
 
-        // BACK-SIDE
-        // BACK LEFT TOP
-        PxVec3(50, 10, 8),
-        // BACK RIGHT TOP
-        PxVec3(0, 10, 10),
-        // BACK RIGHT BOTTOM
-        PxVec3(0, 0, 10),
-        // BACK LEFT BOTTOM
-        PxVec3(50, 0, 8),
-
-        // FRONT-SIDE   --connecting the back to the front here
-        // FRONT LEFT BOTTOM
-        PxVec3(50, 0, 2),
-        // FRONT LEFT TOP
-        PxVec3(50, 10, 2),
-        // FRONT RIGHT TOP
-        PxVec3(0, 10, 0),
-        // FRONT RIGHT BOTTOM
-        PxVec3(0, 0, 0)
-    };
-
-    paddleLeft = createConvexHull(meshPaddleLeft, 8, PxVec3( 60.f, 0.1f, -65.f));
-    paddleLeft->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-    paddleLeft->setMass(0.f);
     // The global pose for right and left paddle are basically the same (check the vertices)
     // However to create the mirror effect, ther right paddle is multiplied by PI to switch the direction
     // This allows us to create the effect of paddle rotation on right and left side
-    paddleLeft->setGlobalPose( PxTransform( paddleLeft->getGlobalPose().p,
-                                            paddleLeft->getGlobalPose().q * PxQuat(PxPi, PxVec3(0, -1, 0)))  );
-    gScene->addActor(*paddleLeft);
+    paddleLeft2->setGlobalPose(
+        PxTransform(
+            paddleLeft2->getGlobalPose().p,
+            paddleLeft2->getGlobalPose().q * PxQuat(PxPi, PxVec3(0, 1, 0))
+        ));
+
+    gScene->addActor(*paddleLeft2);
 
     //---------- translation------------
 
@@ -620,10 +612,10 @@ void initPhysics()
                           *gPhysics,
                           wall5,
                           PxTransform(
-                              paddleLeft->getGlobalPose().p,
-                              paddleLeft->getGlobalPose().q * PxQuat(PxPi / 2, PxVec3(0, 0, 1)) ),
-                          paddleLeft,
-                          PxTransform(PxVec3(0, 0, 0), PxQuat(PxPi / 2, PxVec3(0, 0, 1)))
+                              paddleLeft2->getGlobalPose().p,
+                              PxQuat(PxHalfPi, PxVec3(0, 0, 1)) ),
+                          paddleLeft2,
+                          PxTransform(PxVec3(0, 0, 0), PxQuat(PxHalfPi, PxVec3(0, 0, 1)))
                       );
 
     jointPaddleLeft->setConstraintFlag(PxConstraintFlag::eVISUALIZATION, true);
@@ -633,35 +625,9 @@ void initPhysics()
     //----------end translation------------
 
     // Paddle - Right
-    PxVec3 meshPaddleRight[] =
-    {
-        //VERTEXES ARE IN CLOCKSWISE ORDER STARTING FROM THE BACK TO THE FRONT
+    paddleRight2 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(45.f, .1f, -5.f)),  PxBoxGeometry(25.0f, 10.0f, 3.0f), *gMaterialPaddles, 1.0f);
 
-        // BACK-SIDE
-        // BACK LEFT TOP
-        PxVec3(50, 10, 6),
-        // BACK RIGHT TOP
-        PxVec3(0, 10, 10),
-        // BACK RIGHT BOTTOM
-        PxVec3(0, 0, 10),
-        // BACK LEFT BOTTOM
-        PxVec3(50, 0, 6),
-
-        // FRONT-SIDE   --connecting the back to the front here
-        // FRONT LEFT BOTTOM
-        PxVec3(50, 0, 4),
-        // FRONT LEFT TOP
-        PxVec3(50, 10, 4),
-        // FRONT RIGHT TOP
-        PxVec3(0, 10, 0),
-        // FRONT RIGHT BOTTOM
-        PxVec3(0, 0, 0)
-    };
-
-    paddleRight = createConvexHull(meshPaddleRight, 8, PxVec3(-60.f, .1f, -75.f));
-    paddleRight->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-    paddleRight->setMass(0.f);
-    gScene->addActor(*paddleRight);
+    gScene->addActor(*paddleRight2);
 
     //---------- translation------------
 
@@ -676,14 +642,14 @@ void initPhysics()
                            *gPhysics,
                            wall6,
                            PxTransform(
-                               paddleRight->getGlobalPose().p,
-                               paddleRight->getGlobalPose().q * PxQuat(-PxPi / 2, PxVec3(0, 0, 1))),
-                           paddleRight,
-                           PxTransform(PxVec3(0, 0, 0), PxQuat(-PxPi / 2, PxVec3(0, 0, 1)))
+                               paddleRight2->getGlobalPose().p,
+                               paddleRight2->getGlobalPose().q * PxQuat(-PxHalfPi, PxVec3(0, 0, 1))),
+                           paddleRight2,
+                           PxTransform(PxVec3(0, 0, -5), PxQuat(-PxHalfPi, PxVec3(0, 0, 1)))
                        );
 
     jointPaddleRight->setConstraintFlag(PxConstraintFlag::eVISUALIZATION, true);
-    jointPaddleRight->setLimit(PxJointAngularLimitPair(-PxPi / 16, PxPi / 6));
+    jointPaddleRight->setLimit(PxJointAngularLimitPair(-PxPi / 20, PxPi / 6));
     jointPaddleRight->setRevoluteJointFlag(PxRevoluteJointFlag::eLIMIT_ENABLED, true);
 
 
@@ -699,22 +665,17 @@ void initPhysics()
     /// ----------------- BALL  ---------------------- //
     /////////////////////////////////////////////////////
 
+    PxMaterial* ballMaterial = NULL;
+
+    ballMaterial = gPhysics->createMaterial(0.5f, 0.2f, 0.597);
+
     ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(-87.0f, 0.0f, -7.0f)), PxSphereGeometry(3.0f),
-                           *gMaterial, 1.0f);
+                           *ballMaterial, 1.0f);
     ball->setLinearDamping(0.005f);
-    //ball->setLinearVelocity(PxVec3(-40, 0, 80));
-    //ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, .5f));
-    //ball->addForce(PxVec3(0.f,1000.f,0.f), PxForceMode::eACCELERATION);
-    ball->setMass(1000.f);
+    ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, .5f));
+    ball->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
+    ball->setMass(10.f);
     gScene->addActor(*ball);
-
-    // Ball 2
-
-    /*PxRigidDynamic* ball2 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(30.0f, 0.0f, -55.0f)), PxSphereGeometry(3.0f),
-        *gMaterial, 1.0f);
-    ball2->setLinearDamping(0.005f);
-    ball2->setMass(10.f);
-    gScene->addActor(*ball2);*/
 
 
     /////////////////////////////////////////////////////
