@@ -157,7 +157,7 @@ void display()
         vector<PxRigidActor*> actors(nbActors);
         gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC,
                           reinterpret_cast<PxActor**>(&actors[0]), nbActors);
-        render->renderActors(&actors[0], static_cast<PxU32>(actors.size()), true, color);
+        render->renderActors(&actors[0], static_cast<PxU32>(actors.size()), ALLOW_SHADOWS, color);
 
         if (ball->getGlobalPose().p[1] > 5)
         {
@@ -588,19 +588,19 @@ void initPhysics()
 
         // BACK-SIDE
         // BACK LEFT TOP
-        PxVec3(50, 10, 6),
+        PxVec3(50, 10, 8),
         // BACK RIGHT TOP
         PxVec3(0, 10, 10),
         // BACK RIGHT BOTTOM
         PxVec3(0, 0, 10),
         // BACK LEFT BOTTOM
-        PxVec3(50, 0, 6),
+        PxVec3(50, 0, 8),
 
         // FRONT-SIDE   --connecting the back to the front here
         // FRONT LEFT BOTTOM
-        PxVec3(50, 0, 4),
+        PxVec3(50, 0, 2),
         // FRONT LEFT TOP
-        PxVec3(50, 10, 4),
+        PxVec3(50, 10, 2),
         // FRONT RIGHT TOP
         PxVec3(0, 10, 0),
         // FRONT RIGHT BOTTOM
@@ -712,6 +712,15 @@ void initPhysics()
     //ball->addForce(PxVec3(0.f,1000.f,0.f), PxForceMode::eACCELERATION);
     ball->setMass(1000.f);
     gScene->addActor(*ball);
+
+    // Ball 2
+
+    /*PxRigidDynamic* ball2 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(30.0f, 0.0f, -55.0f)), PxSphereGeometry(3.0f),
+        *gMaterial, 1.0f);
+    ball2->setLinearDamping(0.005f);
+    ball2->setMass(10.f);
+    gScene->addActor(*ball2);*/
+
 
     /////////////////////////////////////////////////////
     /// ----------------- BALL  ---------------------- //
