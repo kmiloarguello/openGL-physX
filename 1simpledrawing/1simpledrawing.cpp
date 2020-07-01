@@ -33,6 +33,19 @@ PxRigidDynamic* ball = NULL;
 
 vector<PxRigidActor*> boxes;
 PxRigidDynamic* gKinematics;
+
+// OBSTACLES
+//Global variables to rotate the paddles
+// Right paddle
+PxRigidDynamic* paddleRight = NULL;
+PxRigidStatic* wall6 = NULL;
+PxRevoluteJoint* jointPaddleRight = NULL;
+// Left paddle
+PxRigidDynamic* paddleLeft = NULL;
+PxRigidStatic* wall5 = NULL;
+PxRevoluteJoint* jointPaddleLeft = NULL;
+
+
 // Camera variables
 glm::vec3 camera_eye = glm::vec3(0.0f, 0.0f, 2.0f);
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -172,59 +185,56 @@ void reshape(int w, int h)
     glTranslatef(0.0, 0.0, -3.0);
 }
 
+
+
 /// --------------------------------------------------------------------
 /// --------------------------------------------------------------------
 /// EVENTS
 /// --------------------------------------------------------------------
 /// --------------------------------------------------------------------
-void keyboard(unsigned char key, int x, int y)
+
+/// Function to rotate the Paddles
+// It applies a force to the update the pose
+void triggerPaddle(PxRigidDynamic* paddle, PxRevoluteJoint* joint, float force) {
+    if (paddle->isSleeping()) {
+        paddle->wakeUp();
+    }
+    joint->setDriveVelocity(force);
+    joint->setRevoluteJointFlag(PxRevoluteJointFlag::eDRIVE_ENABLED, true);
+}
+
+void KeyPress(unsigned char key, int x, int y)
 {
     switch (key)
     {
-    case 's':   /* escalado  */
-        sx = sx + 0.1;
-        sy = sy + 0.1;
-        sz = sz + 0.1;
-        glutPostRedisplay();
+    case 'd': 
+        // Rotating the right paddle
+        triggerPaddle(paddleRight,jointPaddleRight,10.0f);
+        break;
+    case 'q':
+        // Rotating the left paddle
+        triggerPaddle(paddleLeft, jointPaddleLeft, 10.0f);
         break;
 
-    case 'S':  /* escalado  */
-        sx = sx - 0.1;
-        sy = sy - 0.1;
-        sz = sz - 0.1;
-        glutPostRedisplay();
+    default:
         break;
+    }
+}
 
-    case 'e':  /* rotacion  */
-        elbow = (elbow + 5) % 360;
-        glutPostRedisplay();
+
+void KeyRelease(unsigned char key, int x, int y)
+{
+    switch (key)
+    {
+        //implement your own
+    case 'd':
+        // Returning to the original position - right paddle
+        triggerPaddle(paddleRight, jointPaddleRight, -10.0f);
         break;
-
-    case 'E':  /* rotacion  */
-        elbow = (elbow - 5) % 360;
-        glutPostRedisplay();
+    case 'q':
+        // Returning to the original position - left paddle
+        triggerPaddle(paddleLeft, jointPaddleLeft, -10.0f);
         break;
-
-    case 't':  /*  translacion en x  */
-        tx = tx + 0.1;
-        glutPostRedisplay();
-        break;
-
-    case 'T':  /*  translacion  en x */
-        tx = tx - 0.1;
-        glutPostRedisplay();
-        break;
-
-    case 'y':  /*  translacion  en y  */
-        ty = ty + 0.1;
-        glutPostRedisplay();
-        break;
-
-    case 'Y':  /*  translacion  en y  */
-        ty = ty - 0.1;
-        glutPostRedisplay();
-        break;
-
     default:
         break;
     }
@@ -384,7 +394,7 @@ void initPhysics()
 
     //RIGHT PADDLE WALL
     PxShape* wall6Shape = gPhysics->createShape(PxBoxGeometry(21.0f, 10.0f, 2.0f), *gMaterial);
-    PxRigidStatic* wall6 = gPhysics->createRigidStatic(PxTransform(PxVec3(-80.0f, 10.0f, -73.0f)));
+    wall6 = gPhysics->createRigidStatic(PxTransform(PxVec3(-80.0f, 10.0f, -73.0f)));
     wall6->attachShape(*wall6Shape);
     gScene->addActor(*wall6);
 
@@ -530,34 +540,53 @@ void initPhysics()
 
         // BACK-SIDE
         // BACK LEFT TOP
-        PxVec3(50, 10, 10),
+        PxVec3(50, 10, 6),
         // BACK RIGHT TOP
-        PxVec3(0, 10, 6),
+        PxVec3(0, 10, 10),
         // BACK RIGHT BOTTOM
-        PxVec3(0, 0, 6),
+        PxVec3(0, 0, 10),
         // BACK LEFT BOTTOM
-        PxVec3(50, 0, 10),
+        PxVec3(50, 0, 6),
 
         // FRONT-SIDE   --connecting the back to the front here
         // FRONT LEFT BOTTOM
-        PxVec3(50, 0, 0),
+        PxVec3(50, 0, 4),
         // FRONT LEFT TOP
-        PxVec3(50, 10, 0),
+        PxVec3(50, 10, 4),
         // FRONT RIGHT TOP
-        PxVec3(0, 10, 4),
+        PxVec3(0, 10, 0),
         // FRONT RIGHT BOTTOM
-        PxVec3(0, 0, 4)
+        PxVec3(0, 0, 0)
     };
 
     //position(x-axis, z-axis, y-axis)
-    PxRigidDynamic* paddleLeft = createConvexHull(meshPaddleLeft, 8, PxVec3( 10.f, 0.1f, -80.f));
-    paddleLeft->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    paddleLeft = createConvexHull(meshPaddleLeft, 8, PxVec3( 60.f, 0.1f, -65.f));
+    paddleLeft->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+    paddleLeft->setMass(0.f);
+    // The global pose for right and left paddle are basically the same (check the vertices)
+    // However to create the mirror effect, ther right paddle is multiplied by PI to switch the direction
+    // This allows us to create the effect of paddle rotation on right and left side
+    paddleLeft->setGlobalPose( PxTransform( paddleLeft->getGlobalPose().p , paddleLeft->getGlobalPose().q * PxQuat(PxPi, PxVec3(0, -1, 0)))  );
     gScene->addActor(*paddleLeft);
 
-    //Create translation here
+    //---------- translation------------
+  
+    // The value for the rotation is PxPi (Positive)
+    jointPaddleLeft = PxRevoluteJointCreate(
+        *gPhysics,
+        wall5,
+        PxTransform(
+            paddleLeft->getGlobalPose().p,
+            paddleLeft->getGlobalPose().q * PxQuat(PxPi / 2, PxVec3(0, 0, 1)) ),
+        paddleLeft,
+        PxTransform(PxVec3(0, 0, 0), PxQuat(PxPi / 2, PxVec3(0, 0, 1)))
+    );
 
+    jointPaddleLeft->setConstraintFlag(PxConstraintFlag::eVISUALIZATION, true);
+    jointPaddleLeft->setLimit(PxJointAngularLimitPair(-PxPi / 16, PxPi / 6));
+    jointPaddleLeft->setRevoluteJointFlag(PxRevoluteJointFlag::eLIMIT_ENABLED, true);
 
-    //------------end tranlsation here---------
+    //----------end translation------------
 
     // Paddle - Right
     PxVec3 meshPaddleRight[] =
@@ -585,11 +614,33 @@ void initPhysics()
         PxVec3(0, 0, 0)
     };
 
-    PxRigidDynamic* paddleRight = createConvexHull(meshPaddleRight, 8, PxVec3(-60.f, 0.1f, -80.f));
-    paddleRight->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+    paddleRight = createConvexHull(meshPaddleRight, 8, PxVec3(-60.f, .1f, -75.f));
+    paddleRight->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+    paddleRight->setMass(0.f);
     gScene->addActor(*paddleRight);
 
-    //create translatio here
+    //---------- translation------------
+
+    // The way how the paddle rotates is by using a joint i.e an shoulder
+    // There is a fixed object (right wall) and a dynamic object (paddle)
+    // It must be use create a revolute function
+    // Also, it is necessary to set the constraints for visualization and limits
+    // This joint is attached to the KeyPress() function event to rotate
+    // The rotation axis is defined on PxVec3 inside of PxQuad
+
+    jointPaddleRight = PxRevoluteJointCreate(
+        *gPhysics,
+        wall6,
+        PxTransform(
+            paddleRight->getGlobalPose().p,
+            paddleRight->getGlobalPose().q * PxQuat(-PxPi / 2, PxVec3(0, 0, 1))),
+        paddleRight,
+        PxTransform(PxVec3(0, 0, 0), PxQuat(-PxPi / 2, PxVec3(0, 0, 1)))
+    );
+
+    jointPaddleRight->setConstraintFlag(PxConstraintFlag::eVISUALIZATION, true);
+    jointPaddleRight->setLimit(PxJointAngularLimitPair(-PxPi/ 16, PxPi / 6));
+    jointPaddleRight->setRevoluteJointFlag(PxRevoluteJointFlag::eLIMIT_ENABLED, true);
 
 
     //----------end translation------------
@@ -708,7 +759,8 @@ int main(int argc, char** argv)
     initPhysics();
 
     glutReshapeFunc(reshape);
-    glutKeyboardFunc(keyboard);
+    glutKeyboardFunc(KeyPress);
+    glutKeyboardUpFunc(KeyRelease);
     glutMainLoop();
     return 0;
 }
