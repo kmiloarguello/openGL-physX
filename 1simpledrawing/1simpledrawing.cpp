@@ -824,7 +824,7 @@ int main(int argc, char** argv)
     //loadTextures("./assets/images/cyer_scraper.bmp");
     //loadTextures("./assets/images/digi_punk.bmp");
     //loadTextures("./assets/images/purple_liquid.bmp");
-    //loadTextures("./assets/images/synth_wave.bmp");
+
 
 
     //loadTextures("./assets/images/scenary.bmp");
