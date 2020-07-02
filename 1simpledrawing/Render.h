@@ -10,20 +10,15 @@ using namespace physx;
 
 namespace Render
 {
-/*public:
-	Render();
-	~Render();
-	*/
-
-	void setupColors();
-	void setupLights();
-	void renderActors(PxRigidActor** actors, const PxU32 numActors, bool shadows, const PxVec3& color);
-	PX_FORCE_INLINE void renderGeometryHolder(const PxGeometryHolder& h);
-	void renderGeometry(const PxGeometry& geom);
-	PxRigidDynamic* createConvexMesh(PxPhysics& physics, PxVec3* verts, PxU32 numVerts, PxVec3& position, PxMaterial& material);
-	PxConvexMesh* createConvexMesh2(PxPhysics& physics, PxVec3* verts, PxU32 numVerts);
-	void startRender(const PxVec3& cameraEye, const PxVec3& cameraDir, PxReal clipNear, PxReal clipFar);
-	void finishRender();
+	void					setupColors();
+	void					setupLights();
+	void					renderActors(PxRigidActor** actors, const PxU32 numActors, bool shadows, const PxVec3& color);
+	PX_FORCE_INLINE void	renderGeometryHolder(const PxGeometryHolder& h);
+	void					renderGeometry(const PxGeometry& geom);
+	PxRigidDynamic*			createConvexMesh(PxPhysics& physics, PxVec3* verts, PxU32 numVerts, PxVec3& position, PxMaterial& material);
+	PxConvexMesh*			createConvexMesh2(PxPhysics& physics, PxVec3* verts, PxU32 numVerts);
+	void					startRender(const PxVec3& cameraEye, const PxVec3& cameraDir, PxReal clipNear, PxReal clipFar);
+	void					finishRender();
 
 	class Camera
 	{

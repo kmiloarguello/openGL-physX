@@ -23,7 +23,10 @@
 #include "PxPhysicsAPI.h"
 
 #define MAX_NUM_MESH_VEC3S  1024
-# define PI 3.1415
+#define PI 3.1415
+
+#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 600
 
 // HELPERS FOR PHYSX
 

@@ -5,15 +5,13 @@
 #include "globals.h"
 #include "Render.h"
 #include "ImageLoader.h"
+#include <sstream>
 
 using namespace std;
 using namespace physx;
 using namespace Render;
 
 static PxVec3 gVertexBuffer[MAX_NUM_MESH_VEC3S];
-
-// RENDER Variables
-//Render* render = nullptr;
 
 // PhysX Variables
 PxDefaultAllocator      gAllocator;
@@ -46,6 +44,9 @@ PxRigidDynamic* paddleLeft2 = NULL;
 PxRigidStatic* wall5 = NULL;
 PxRevoluteJoint* jointPaddleLeft = NULL;
 
+// On collision variable
+PxSimulationEventCallback* events = NULL;
+
 PxRigidDynamic* gPlunger = NULL;
 Render::Camera* sCamera;
 
@@ -55,19 +56,22 @@ glm::vec3 camera_eye = glm::vec3(0.0f, 0.0f, 2.0f);
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 camera_forward = glm::vec3(0.0f, 0.0f, -1.0f);
 
-static int shoulder = 0, elbow = 0;
-
-int n = 20, m = 20;
-float r = 1.0, alpha = 0.0, theta = 0.0, delta, h = 1.0;
-float xp, yp, zp, puntos[100][100][3], ptosElipses[100][100][2];
-float ry = 1.0;
-float compZ = -1.5;
-float sx = 1.0, sy = 1.0, sz = 1.0;
-float tx = 0.0, ty = 0.0;
 
 // Texture variables
 unsigned int _id;
 
+
+// User score
+
+int globalScore = 0;
+
+enum GameState {
+    Init,
+    Menu,
+    Game,
+    GameOver,
+    Paused
+} gameState;
 
 // INIT FUNCTIONS
 void initPhysics();
@@ -76,6 +80,7 @@ void idleCallback();
 // Temp
 void stepPhysics();
 void cleanupPhysics();
+void createANewBall();
 
 /// --------------------------------------------------------------------
 /// --------------------------------------------------------------------
@@ -90,6 +95,9 @@ void init()
     Render::setupColors();
     Render::setupLights();
     glutIdleFunc(idleCallback);
+
+    gameState = GameState::Init;
+
 }
 
 void setupTextures()
@@ -145,6 +153,64 @@ void mouseCallback(int button, int state, int x, int y)
     sCamera->handleMouse(button, state, x, y);
 }
 
+void displayText(float x, float y, int r, int g, int b, const char* string) {
+    int j = strlen(string);
+
+    glColor3f(r, g, b);
+    glRasterPos2f(x, y);
+    for (int i = 0; i < j; i++) {
+
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, string[i]);
+    }
+}
+
+string int_to_str(int x) {
+    stringstream ss;
+    ss << x;
+    return ss.str();
+}
+
+void renderScore(int x) {
+
+    string str = "Your score: " + int_to_str(x);
+    const char* cstr = str.c_str();
+
+    displayText(60.0, 90.0, 1, 1, 1, cstr);
+}
+
+void renderInstruction() {
+
+    string str = "Press SPACE BAR to start.";
+    const char* cstr = str.c_str();
+
+    displayText(60.0, 90.0, 1, 1, 1, cstr);
+}
+
+void renderGameOver() {
+
+    string str = "GAME OVER";
+    const char* cstr = str.c_str();
+
+    displayText(30.0, 0.0, 1, 0, 0, cstr);
+}
+
+
+void updateGameState() {
+    if (gameState == GameState::Game) {
+        renderScore(globalScore++);
+    }
+
+    else if (gameState == GameState::Init) {
+        renderInstruction();
+    }
+    else if (gameState == GameState::GameOver) {
+        renderGameOver();
+        gScene->removeActor(*ball);
+        ball = NULL;
+        createANewBall();
+        globalScore = 0;
+    }
+}
 
 // DISPLAY ELEMENTS IN SCENE
 void display()
@@ -156,19 +222,19 @@ void display()
 
     // Get the scene
     PxGetPhysics().getScenes(&gScene, 1);
-    Render::startRender(sCamera->getEye(), sCamera->getDir(), 1.0f, 1.0000f);
+    //Render::startRender(sCamera->getEye(), sCamera->getDir(), 1.0f, 1.0000f);
 
     PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC |
                                          PxActorTypeFlag::eRIGID_STATIC);
     const PxVec3 color(1.0f, 0.0f, 0.0f);
 
-    //glTranslatef(0.0f, -1.0f, 0.0f);
-    //glScalef(sx, sy, sz);
-    //glRotatef(90, 0, 1, 0);
     renderRoom();
 
     if (nbActors)
     {
+
+        updateGameState();
+
         vector<PxRigidActor*> actors(nbActors);
         gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC,
                           reinterpret_cast<PxActor**>(&actors[0]), nbActors);
@@ -185,6 +251,11 @@ void display()
         // Set a constant force to the ball in order to aim its direction towards the paddles
         // This has to be made for each frame
         ball->addForce(PxVec3(0.0f,0.0f,-10.0f), PxForceMode::eACCELERATION);
+
+        if (ball->getGlobalPose().p[2] < -90.f) {
+            gameState = GameState::GameOver;
+            cout << "POS: " << ball->getGlobalPose().p[2] << endl;
+        }
     }
 
     glutSwapBuffers();
@@ -207,6 +278,19 @@ void reshape(int w, int h)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -3.0);
+}
+
+/*
+ * menu function
+ * key - integer representing the chosen action
+ */
+void menu(int key) {
+
+    switch (key) {
+    case 'A':
+    case 'a':
+        exit(0);
+    }
 }
 
 
@@ -260,6 +344,7 @@ void KeyPress(unsigned char key, int x, int y)
     case ' ':
         // Pulling the plunger
         triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -50.0f));
+        gameState = GameState::Game;
         break;
 
     default:
@@ -402,7 +487,7 @@ void initPhysics()
     // This allows us to have a board with less friction between the ball and the ground
     gMaterial = gPhysics->createMaterial(0.0f, 0.1f, 1.2f);
     gMaterial2 = gPhysics->createMaterial(0.0f, 0.5f, 1.4f);
-    gMaterialPaddles = gPhysics->createMaterial(0.0f,0.3,1.2f);
+    gMaterialPaddles = gPhysics->createMaterial(0.0f,0.1,1.0f);
 
     // BASE -> Actor -> RigidBody
     // PxRigidStatic simulates a rigid body object
@@ -446,12 +531,25 @@ void initPhysics()
     wall3->attachShape(*wall3Shape);
     gScene->addActor(*wall3);
 
+    // LEFT DIAGONAL WALL
+    PxShape* wall4_5Shape = gPhysics->createShape(PxBoxGeometry(20.0f, 10.0f, 2.0f), *gMaterial);
+    PxRigidStatic* wall4_5 = gPhysics->createRigidStatic(PxTransform(PxVec3(90.0f, 10.0f, -55.0f)));
+    wall4_5->attachShape(*wall4_5Shape);
+    gScene->addActor(*wall4_5);
+    wall4_5->setGlobalPose(PxTransform( wall4_5->getGlobalPose().p , PxQuat(-45.0, PxVec3(0,1,0) )));
 
     //LEFT PADDLE WALL
     PxShape* wall5Shape = gPhysics->createShape(PxBoxGeometry(21.0f, 10.0f, 2.0f), *gMaterial);
     PxRigidStatic* wall5 = gPhysics->createRigidStatic(PxTransform(PxVec3(80.0f, 10.0f, -73.0f)));
     wall5->attachShape(*wall5Shape);
     gScene->addActor(*wall5);
+
+    // RIGHT DIAGONAL WALL
+    PxShape* wall5_6Shape = gPhysics->createShape(PxBoxGeometry(20.0f, 10.0f, 2.0f), *gMaterial);
+    PxRigidStatic* wall5_6 = gPhysics->createRigidStatic(PxTransform(PxVec3(-90.0f, 10.0f, -55.0f)));
+    wall5_6->attachShape(*wall5_6Shape);
+    gScene->addActor(*wall5_6);
+    wall5_6->setGlobalPose(PxTransform(wall5_6->getGlobalPose().p, PxQuat(45.0, PxVec3(0, 1, 0))));
 
     //RIGHT PADDLE WALL
     PxShape* wall6Shape = gPhysics->createShape(PxBoxGeometry(21.0f, 10.0f, 2.0f), *gMaterial);
@@ -553,36 +651,6 @@ void initPhysics()
     obstacle2->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gScene->addActor(*obstacle2);
 
-
-
-    // Obstacle 3
-    /*  PxVec3 convexVerts2[] = {
-        PxVec3(0,20,0),
-        PxVec3(10,0,0),
-        PxVec3(-10,0,0),
-        PxVec3(0,0,10),
-        PxVec3(0,0,-10)
-        };
-        PxRigidDynamic* obstacle3 = render->createAConvexHull(*gPhysics, convexVerts2, 5, PxVec3(-50.0f, 5.0f, 0.0f), *gMaterial);
-        gScene->addActor(*obstacle3);
-
-        PxRigidDynamic* obstacle2 = createConvexHull(convexVerts, 5, PxVec3(-50.f,0.1f,0.f) );
-        obstacle2->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-        obstacle2->setMass(0.f);
-        obstacle2->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
-        gScene->addActor(*obstacle2);
-    */
-
-    /*  float i;
-        for (i = 30; i > 3; i--)
-        {
-        PxRigidDynamic* obstacle4 = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(i+66, 10.0f, 98.0f - i)), PxBoxGeometry(2.0f, 10.0f, i), *gMaterial, 1.0f);
-        obstacle4->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-        obstacle4->setMass(0.f);
-        obstacle4->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.f));
-        gScene->addActor(*obstacle4);
-        }*/
-
     // Obstacle 2
     PxVec3 convexVerts5[] =
     {
@@ -624,7 +692,7 @@ void initPhysics()
 
     //---------- translation------------
 
-    // The value for the rotation is PxPi (Positive)
+    // The value for the rotation is PxHalfPi (Positive)
     jointPaddleLeft = PxRevoluteJointCreate(
                           *gPhysics,
                           wall5,
@@ -742,6 +810,20 @@ void initPhysics()
 
 }
 
+void createANewBall() {
+    PxMaterial* ballMaterial = NULL;
+
+    ballMaterial = gPhysics->createMaterial(0.5f, 0.2f, 0.597);
+
+    ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(-87.0f, 0.0f, -7.0f)), PxSphereGeometry(3.0f),
+        *ballMaterial, 1.0f);
+    ball->setLinearDamping(0.005f);
+    ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, .5f));
+    ball->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
+    ball->setMass(10.f);
+    gScene->addActor(*ball);
+}
+
 void updateKinematics(PxReal timeStep)
 {
     PxTransform motion;
@@ -794,7 +876,7 @@ int main(int argc, char** argv)
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 
-    glutInitWindowSize(600, 600);
+    glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(argv[0]);
 
@@ -814,13 +896,18 @@ int main(int argc, char** argv)
 
     // Initialize PhysX
     initPhysics();
-    glutMouseFunc(mouseCallback);
-    glutMotionFunc(motionCallback);
+    //glutMouseFunc(mouseCallback);
+    //glutMotionFunc(motionCallback);
 
     glutReshapeFunc(reshape);
     glutKeyboardFunc(KeyPress);
     glutKeyboardUpFunc(KeyRelease);
-    motionCallback(0, 0);
+    //motionCallback(0, 0);
+
+    // creates the main menu (right button)
+    glutCreateMenu(menu);
+    glutAddMenuEntry("Quit", 'q');
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     glutMainLoop();
 

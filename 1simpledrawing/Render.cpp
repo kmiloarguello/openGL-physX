@@ -424,7 +424,7 @@ namespace Render
         mDir = qy.rotate(mDir);
 
         mDir.normalize();
-
+        
         mMouseX = x;
         mMouseY = y;
     }
