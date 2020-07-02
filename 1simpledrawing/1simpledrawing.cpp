@@ -56,6 +56,7 @@ glm::vec3 camera_eye = glm::vec3(0.0f, 0.0f, 2.0f);
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 camera_forward = glm::vec3(0.0f, 0.0f, -1.0f);
 
+int isLaunched = 0;
 
 // Texture variables
 unsigned int _id;
@@ -205,10 +206,10 @@ void updateGameState() {
     }
     else if (gameState == GameState::GameOver) {
         renderGameOver();
+        renderScore(globalScore);
         gScene->removeActor(*ball);
         ball = NULL;
         createANewBall();
-        globalScore = 0;
     }
 }
 
@@ -226,7 +227,7 @@ void display()
 
     PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC |
                                          PxActorTypeFlag::eRIGID_STATIC);
-    const PxVec3 color(1.0f, 0.0f, 0.0f);
+    const PxVec3 color(1.0f, 0.0f, 0.4f);
 
     renderRoom();
 
@@ -247,10 +248,14 @@ void display()
             ball->setGlobalPose(PxTransform(PxVec3(ball->getGlobalPose().p[0], 3,
                                                    ball->getGlobalPose().p[2]) ));
         }
+        //if (isLaunched == 1) {
+        //    ball->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+        //}
 
         // Set a constant force to the ball in order to aim its direction towards the paddles
         // This has to be made for each frame
-        ball->addForce(PxVec3(0.0f,0.0f,-10.0f), PxForceMode::eACCELERATION);
+
+        ball->addForce(PxVec3(0.0f,0.0f,-20.0f), PxForceMode::eACCELERATION);
 
         if (ball->getGlobalPose().p[2] < -90.f) {
             gameState = GameState::GameOver;
@@ -345,6 +350,7 @@ void KeyPress(unsigned char key, int x, int y)
         // Pulling the plunger
         triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -50.0f));
         gameState = GameState::Game;
+        globalScore = 0;
         break;
 
     default:
@@ -371,6 +377,8 @@ void KeyRelease(unsigned char key, int x, int y)
     case ' ':
         // Returning the plunger
         triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -28.0f));
+        isLaunched = 1;
+        //ball->setLinearVelocity(PxVec3(0.0f, 0.0f, -30.0f), true);
         break;
 
     default:
@@ -451,7 +459,7 @@ void initPhysics()
     // It is good to mention the simulation part and the time slots fetch()
 
     PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
-    sceneDesc.gravity = PxVec3(0.0f, -9.81f, -2.0f);
+    sceneDesc.gravity = PxVec3(0.0f, -9.81f, -3.0f);
 
     // For handling the Threads, PhysX uses a gDispatcher
     // GPU Optimization
@@ -487,7 +495,7 @@ void initPhysics()
     // This allows us to have a board with less friction between the ball and the ground
     gMaterial = gPhysics->createMaterial(0.0f, 0.1f, 1.2f);
     gMaterial2 = gPhysics->createMaterial(0.0f, 0.5f, 1.4f);
-    gMaterialPaddles = gPhysics->createMaterial(0.0f,0.1,1.0f);
+    gMaterialPaddles = gPhysics->createMaterial(0.0f,0.1f,1.1f);
 
     // BASE -> Actor -> RigidBody
     // PxRigidStatic simulates a rigid body object
@@ -546,10 +554,10 @@ void initPhysics()
 
     // RIGHT DIAGONAL WALL
     PxShape* wall5_6Shape = gPhysics->createShape(PxBoxGeometry(20.0f, 10.0f, 2.0f), *gMaterial);
-    PxRigidStatic* wall5_6 = gPhysics->createRigidStatic(PxTransform(PxVec3(-90.0f, 10.0f, -55.0f)));
+    PxRigidStatic* wall5_6 = gPhysics->createRigidStatic(PxTransform(PxVec3(-80.0f, 10.0f, -65.0f)));
     wall5_6->attachShape(*wall5_6Shape);
     gScene->addActor(*wall5_6);
-    wall5_6->setGlobalPose(PxTransform(wall5_6->getGlobalPose().p, PxQuat(45.0, PxVec3(0, 1, 0))));
+    wall5_6->setGlobalPose(PxTransform(wall5_6->getGlobalPose().p, PxQuat(60.0, PxVec3(0, 1, 0))));
 
     //RIGHT PADDLE WALL
     PxShape* wall6Shape = gPhysics->createShape(PxBoxGeometry(21.0f, 10.0f, 2.0f), *gMaterial);
@@ -756,10 +764,10 @@ void initPhysics()
 
     ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(-87.0f, 0.0f, -7.0f)), PxSphereGeometry(3.0f),
                            *ballMaterial, 1.0f);
-    ball->setLinearDamping(0.005f);
-    ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, .5f));
+    //ball->setLinearDamping(0.05f);
+    ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.0f));
     ball->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
-    ball->setMass(10.f);
+    ball->setMass(50.f);
     gScene->addActor(*ball);
 
 

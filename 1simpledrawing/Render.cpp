@@ -21,7 +21,7 @@ extern void KeyPress(unsigned char key, int x, int y);
 
 void Render::setupColors()
 {
-    glClearColor(0.3f, 0.4f, 0.5f, 1.0);
+    glClearColor(0.1f, 0.0f, 0.25f, 1.0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_COLOR_MATERIAL);
     glDepthFunc(GL_LEQUAL);
