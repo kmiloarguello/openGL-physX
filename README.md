@@ -28,10 +28,21 @@ If you want to contribute on this project, it is important to have the following
 
 Also, we strongly recommend to use Visual Studio 2019, for a better experience.
 
+## Running program with Visual Studio 2019
+
+To run the project using Visual Studio 2019, build the project in **Release** and **x64**. First build the project using this configuration and then you can run the project.
+
+## Game Controls
+
+**Launch ball** = **spacebar**
+
+**left paddle** = **q**
+
+**right paddle** = **d**
+
 ## Acknowledgement
 
 We would like to thank the professor Nabil Mustafa for guide us on this E4 summer project.
-
 
 
 
