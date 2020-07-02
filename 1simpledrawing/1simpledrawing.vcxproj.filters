@@ -23,9 +23,6 @@
     <ClCompile Include="ImageLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PinballESIEE.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Render.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -44,9 +41,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ImageLoader.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PinballESIEE.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="PinballObjects.h">

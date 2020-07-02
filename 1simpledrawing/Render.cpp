@@ -5,16 +5,23 @@
 #include "Render.h"
 #include <stdlib.h>
 #include <iostream>
+#include "PxPhysicsAPI.h"
 
 using namespace std;
 
-static PxVec3 gVertexBuffer[MAX_NUM_MESH_VEC3S];
+using namespace physx;
 
-Render::Render() {}
+static PxVec3 gVertexBuffer[MAX_NUM_MESH_VEC3S];
+extern void initPhysics();
+extern void stepPhysics();
+extern void cleanupPhysics();
+extern void KeyPress(unsigned char key, int x, int y);
+
+//Render::Render() {}
 
 void Render::setupColors()
 {
-    glClearColor(0.3f, 0.4f, 0.5f, 1.0);
+    glClearColor(0.1f, 0.0f, 0.25f, 1.0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_COLOR_MATERIAL);
     glDepthFunc(GL_LEQUAL);
@@ -295,6 +302,27 @@ void Render::renderGeometry(const PxGeometry& geom)
     }
 }
 
+void Render::startRender(const PxVec3& cameraEye, const PxVec3& cameraDir, PxReal clipNear, PxReal clipFar)
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Setup camera
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60.0, GLdouble(glutGet(GLUT_WINDOW_WIDTH)) / GLdouble(glutGet(GLUT_WINDOW_HEIGHT)), GLdouble(clipNear), GLdouble(clipFar));
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(GLdouble(cameraEye.x), GLdouble(cameraEye.y), GLdouble(cameraEye.z), GLdouble(cameraEye.x + cameraDir.x), GLdouble(cameraEye.y + cameraDir.y), GLdouble(cameraEye.z + cameraDir.z), 0.0, 1.0, 0.0);
+
+    glColor4f(0.4f, 0.4f, 0.4f, 1.0f);
+}
+
+void Render::finishRender()
+{
+    glutSwapBuffers();
+}
+
 // RENDER A CONVEX HULL
 PxRigidDynamic* Render::createConvexMesh(PxPhysics& physics, PxVec3* verts, PxU32 numVerts,
                                          PxVec3& position, PxMaterial& material)
@@ -336,4 +364,117 @@ PxConvexMesh* Render::createConvexMesh2(PxPhysics& physics, PxVec3* verts, PxU32
     convexMesh = physics.createConvexMesh(input);
 
     return convexMesh;
+}
+
+
+using namespace physx;
+
+namespace Render
+{
+    Camera::Camera(const PxVec3& eye, const PxVec3& dir)
+    {
+        mEye = eye;
+        mDir = dir.getNormalized();
+        mMouseX = 0;
+        mMouseY = 0;
+    }
+
+    void Camera::handleMouse(int button, int state, int x, int y)
+    {
+        PX_UNUSED(state);
+        PX_UNUSED(button);
+        mMouseX = x;
+        mMouseY = y;
+    }
+
+    bool Camera::handleKey(unsigned char key, int x, int y, float speed)
+    {
+        PX_UNUSED(x);
+        PX_UNUSED(y);
+
+        PxVec3 viewY = mDir.cross(PxVec3(0, 1, 0)).getNormalized();
+        switch (key)
+        {
+        case 'W':	mEye += mDir * 2.0f * speed;		break;
+        case 'S':	mEye -= mDir * 2.0f * speed;		break;
+        case 'A':	mEye -= viewY * 2.0f * speed;		break;
+        case 'F':	mEye += viewY * 2.0f * speed;		break;
+        default:							return false;
+        }
+        return true;
+    }
+
+    void Camera::handleAnalogMove(float x, float y)
+    {
+        PxVec3 viewY = mDir.cross(PxVec3(0, 1, 0)).getNormalized();
+        mEye += mDir * y;
+        mEye += viewY * x;
+    }
+
+    void Camera::handleMotion(int x, int y)
+    {
+        int dx = mMouseX - x;
+        int dy = mMouseY - y;
+
+        PxVec3 viewY = mDir.cross(PxVec3(0, 1, 0)).getNormalized();
+
+        PxQuat qx(PxPi * dx / 180.0f, PxVec3(0, 1, 0));
+        mDir = qx.rotate(mDir);
+        PxQuat qy(PxPi * dy / 180.0f, viewY);
+        mDir = qy.rotate(mDir);
+
+        mDir.normalize();
+        
+        mMouseX = x;
+        mMouseY = y;
+    }
+
+    PxTransform Camera::getTransform() const
+    {
+        PxVec3 viewY = mDir.cross(PxVec3(0, 1, 0));
+
+        if (viewY.normalize() < 1e-6f)
+            return PxTransform(mEye);
+
+        PxMat33 m(mDir.cross(viewY), viewY, -mDir);
+        return PxTransform(mEye, PxQuat(m));
+    }
+
+    PxVec3 Camera::getEye() const
+    {
+        return mEye;
+    }
+
+    PxVec3 Camera::getDir() const
+    {
+        return mDir;
+    }
+
+
+}
+
+namespace Render
+{
+    Render::Camera* sCamera;
+
+    void keyboardCallback(unsigned char key, int x, int y)
+    {
+        if (key == 27)
+            exit(0);
+
+        //if (!sCamera->handleKey(key, x, y))
+          //  keyPress(key, sCamera->getTransform());
+    }
+
+
+    void idleCallback()
+    {
+        glutPostRedisplay();
+    }
+
+    void exitCallback(void)
+    {
+        delete sCamera;
+        cleanupPhysics();
+    }
 }
