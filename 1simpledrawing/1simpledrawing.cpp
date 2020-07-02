@@ -8,11 +8,12 @@
 
 using namespace std;
 using namespace physx;
+using namespace Render;
 
 static PxVec3 gVertexBuffer[MAX_NUM_MESH_VEC3S];
 
 // RENDER Variables
-Render* render = nullptr;
+//Render* render = nullptr;
 
 // PhysX Variables
 PxDefaultAllocator      gAllocator;
@@ -46,6 +47,8 @@ PxRigidStatic* wall5 = NULL;
 PxRevoluteJoint* jointPaddleLeft = NULL;
 
 PxRigidDynamic* gPlunger = NULL;
+Render::Camera* sCamera;
+
 
 // Camera variables
 glm::vec3 camera_eye = glm::vec3(0.0f, 0.0f, 2.0f);
@@ -83,9 +86,9 @@ void cleanupPhysics();
 /// INITIALIZE OPENGL
 void init()
 {
-    render = new Render();
-    render->setupColors();
-    render->setupLights();
+   // render = new Render();
+    Render::setupColors();
+    Render::setupLights();
     glutIdleFunc(idleCallback);
 }
 
@@ -132,15 +135,28 @@ void renderRoom()
     glDisable(GL_TEXTURE_2D);
 }
 
+void motionCallback(int x, int y)
+{
+    sCamera->handleMotion(x, y);
+}
+
+void mouseCallback(int button, int state, int x, int y)
+{
+    sCamera->handleMouse(button, state, x, y);
+}
+
+
 // DISPLAY ELEMENTS IN SCENE
 void display()
 {
+
     stepPhysics();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Get the scene
     PxGetPhysics().getScenes(&gScene, 1);
+    Render::startRender(sCamera->getEye(), sCamera->getDir(), 1.0f, 1.0000f);
 
     PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC |
                                          PxActorTypeFlag::eRIGID_STATIC);
@@ -156,7 +172,7 @@ void display()
         vector<PxRigidActor*> actors(nbActors);
         gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC,
                           reinterpret_cast<PxActor**>(&actors[0]), nbActors);
-        render->renderActors(&actors[0], static_cast<PxU32>(actors.size()), ALLOW_SHADOWS, color);
+        Render::renderActors(&actors[0], static_cast<PxU32>(actors.size()), ALLOW_SHADOWS, color);
 
         // To indicate PhysX that the ball always must be below 5 units, 
         // Prevent that the ball flies :v
@@ -173,6 +189,7 @@ void display()
 
     glutSwapBuffers();
 }
+
 
 void idleCallback()
 {
@@ -772,6 +789,8 @@ void cleanupPhysics()
 /// --------------------------------------------------------------------
 int main(int argc, char** argv)
 {
+    Render::Camera* sCamera = new Render::Camera(PxVec3(50.0f, 50.0f, 50.0f), PxVec3(-0.6f, -0.2f, -0.7f));
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 
@@ -795,10 +814,15 @@ int main(int argc, char** argv)
 
     // Initialize PhysX
     initPhysics();
+    glutMouseFunc(mouseCallback);
+    glutMotionFunc(motionCallback);
 
     glutReshapeFunc(reshape);
     glutKeyboardFunc(KeyPress);
     glutKeyboardUpFunc(KeyRelease);
+    motionCallback(0, 0);
+
     glutMainLoop();
+
     return 0;
 }
