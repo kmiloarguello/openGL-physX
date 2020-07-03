@@ -251,9 +251,14 @@ void display()
         //if (isLaunched == 1) {
         //    ball->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
         //}
+        if (isLaunched == 0)
+        {
+            ball->setGlobalPose(PxTransform(PxVec3(-87.0f, 0.0f, -7.0f)));
+        }
 
         // Set a constant force to the ball in order to aim its direction towards the paddles
         // This has to be made for each frame
+
 
         ball->addForce(PxVec3(0.0f,0.0f,-20.0f), PxForceMode::eACCELERATION);
 
@@ -829,6 +834,7 @@ void createANewBall() {
     ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, .5f));
     ball->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
     ball->setMass(10.f);
+    isLaunched = 0;
     gScene->addActor(*ball);
 }
 
