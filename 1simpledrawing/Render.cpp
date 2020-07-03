@@ -76,8 +76,9 @@ void Render::renderActors(PxRigidActor** actors, const PxU32 numActors, bool sha
             // render object
             glPushMatrix();
             glMultMatrixf(&shapePose.column0.x);
+
             glColor4f(color.x, color.y, color.z, 1.0f);
-  
+            
             Render::renderGeometryHolder(h);
             glPopMatrix();
 
