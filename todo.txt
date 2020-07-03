@@ -1,2 +1,0 @@
--shadow mapping
--bump mapping
