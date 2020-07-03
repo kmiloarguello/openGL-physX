@@ -208,8 +208,17 @@ void updateGameState() {
         renderGameOver();
         renderScore(globalScore);
         gScene->removeActor(*ball);
+        
+        gPlunger->setGlobalPose(PxTransform(
+            gPlunger->getGlobalPose().p[0],
+            gPlunger->getGlobalPose().p[1],
+            -30.f,
+            gPlunger->getGlobalPose().q));
+
         ball = NULL;
         createANewBall();
+
+
     }
 }
 
