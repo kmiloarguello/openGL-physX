@@ -208,8 +208,17 @@ void updateGameState() {
         renderGameOver();
         renderScore(globalScore);
         gScene->removeActor(*ball);
+        
+        gPlunger->setGlobalPose(PxTransform(
+            gPlunger->getGlobalPose().p[0],
+            gPlunger->getGlobalPose().p[1],
+            -30.f,
+            gPlunger->getGlobalPose().q));
+
         ball = NULL;
         createANewBall();
+
+
     }
 }
 
@@ -247,17 +256,15 @@ void display()
             ball->setGlobalPose(PxTransform(PxVec3(ball->getGlobalPose().p[0], 3,
                                                    ball->getGlobalPose().p[2]) ));
         }
-        if (gameState == GameState::Init) {
-            ball->setGlobalPose( PxTransform(
-                ball->getGlobalPose().p[0],
-                ball->getGlobalPose().p[1],
-                -7.0f,
-                ball->getGlobalPose().q
-            ));
+        
+        if (isLaunched == 0)
+        {
+            ball->setGlobalPose(PxTransform(PxVec3(-87.0f, 0.0f, -7.0f)));
         }
 
         // Set a constant force to the ball in order to aim its direction towards the paddles
         // This has to be made for each frame
+
 
         ball->addForce(PxVec3(0.0f,0.0f,-20.0f), PxForceMode::eACCELERATION);
 
@@ -849,6 +856,7 @@ void createANewBall() {
     ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, .5f));
     ball->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
     ball->setMass(10.f);
+    isLaunched = 0;
     gScene->addActor(*ball);
 }
 
