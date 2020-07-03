@@ -223,8 +223,7 @@ void display()
 
     // Get the scene
     PxGetPhysics().getScenes(&gScene, 1);
-    //Render::startRender(sCamera->getEye(), sCamera->getDir(), 1.0f, 1.0000f);
-
+ 
     PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC |
                                          PxActorTypeFlag::eRIGID_STATIC);
     const PxVec3 color(1.0f, 0.0f, 0.4f);
@@ -248,9 +247,14 @@ void display()
             ball->setGlobalPose(PxTransform(PxVec3(ball->getGlobalPose().p[0], 3,
                                                    ball->getGlobalPose().p[2]) ));
         }
-        //if (isLaunched == 1) {
-        //    ball->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
-        //}
+        if (gameState == GameState::Init) {
+            ball->setGlobalPose( PxTransform(
+                ball->getGlobalPose().p[0],
+                ball->getGlobalPose().p[1],
+                -7.0f,
+                ball->getGlobalPose().q
+            ));
+        }
 
         // Set a constant force to the ball in order to aim its direction towards the paddles
         // This has to be made for each frame
@@ -261,6 +265,7 @@ void display()
             gameState = GameState::GameOver;
             cout << "POS: " << ball->getGlobalPose().p[2] << endl;
         }
+
     }
 
     glutSwapBuffers();
@@ -292,10 +297,16 @@ void reshape(int w, int h)
 void menu(int key) {
 
     switch (key) {
-    case 'A':
-    case 'a':
-        exit(0);
+        case 'm':
+            gameState = GameState::GameOver;
+            updateGameState();
+            break;
+        case 'A':
+        case 'a':
+            exit(0);
+            break;
     }
+    
 }
 
 
@@ -319,19 +330,6 @@ void triggerPaddle(PxRigidDynamic* paddle, PxRevoluteJoint* joint, float force)
     joint->setRevoluteJointFlag(PxRevoluteJointFlag::eDRIVE_ENABLED, true);
 }
 
-void triggerPlunger(PxRigidDynamic* plunger, PxVec3 position)
-{
-
-    if (plunger->isSleeping())
-    {
-        plunger->wakeUp();
-    }
-
-    plunger->setKinematicTarget(PxTransform(position, PxQuat(PxHalfPi, PxVec3(0, 1, 0))));
-
-}
-
-
 void KeyPress(unsigned char key, int x, int y)
 {
     switch (key)
@@ -348,9 +346,21 @@ void KeyPress(unsigned char key, int x, int y)
 
     case ' ':
         // Pulling the plunger
-        triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -50.0f));
-        gameState = GameState::Game;
-        globalScore = 0;
+
+        if(gPlunger->getGlobalPose().p[2] > -50.0f && gPlunger->getGlobalPose().p[2] < -10.0f) {
+            gPlunger->setGlobalPose(PxTransform(
+                gPlunger->getGlobalPose().p[0],
+                gPlunger->getGlobalPose().p[1],
+                -30.0f,
+                gPlunger->getGlobalPose().q));
+        }
+
+        gPlunger->setGlobalPose(PxTransform(
+            gPlunger->getGlobalPose().p[0],
+            gPlunger->getGlobalPose().p[1],
+            gPlunger->getGlobalPose().p[2] - 10.0,
+            gPlunger->getGlobalPose().q));
+
         break;
 
     default:
@@ -376,9 +386,15 @@ void KeyRelease(unsigned char key, int x, int y)
 
     case ' ':
         // Returning the plunger
-        triggerPlunger(gPlunger, PxVec3(-87.0f, 5.0f, -28.0f));
+        gameState = GameState::Game;
+        ball->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, false);
+
         isLaunched = 1;
-        //ball->setLinearVelocity(PxVec3(0.0f, 0.0f, -30.0f), true);
+        gPlunger->setGlobalPose(PxTransform(
+            gPlunger->getGlobalPose().p[0],
+            gPlunger->getGlobalPose().p[1],
+            gPlunger->getGlobalPose().p[2] + 15.0,
+            gPlunger->getGlobalPose().q));
         break;
 
     default:
@@ -765,10 +781,12 @@ void initPhysics()
     ball = PxCreateDynamic(*gPhysics, PxTransform(PxVec3(-87.0f, 0.0f, -7.0f)), PxSphereGeometry(3.0f),
                            *ballMaterial, 1.0f);
     //ball->setLinearDamping(0.05f);
-    ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 10.0f));
-    ball->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
+    ball->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, -10.0f));
+    //ball->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
+    ball->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
     ball->setMass(50.f);
     gScene->addActor(*ball);
+    
 
 
     /////////////////////////////////////////////////////
@@ -788,8 +806,10 @@ void initPhysics()
     PxTransform pose(PxVec3(-87.0f, 5.0f, -30.0f), rot);
     PxRigidDynamic* plunger = gPhysics->createRigidDynamic(pose);
     plunger->attachShape(*shape);
+    plunger->setActorFlag(PxActorFlag::eDISABLE_GRAVITY, true);
+    plunger->setMass(0.f);
+    plunger->setMassSpaceInertiaTensor(PxVec3(0.f, 0.f, 0.f));
     gScene->addActor(*plunger);
-    plunger->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
     gPlunger = plunger;
 
     /////////////////////////////////////////////////////
@@ -891,29 +911,18 @@ int main(int argc, char** argv)
     // INIT LIGHTS AND COLORS
     init();
 
-    // TODO: Improve the textures - Add one texture for each object
     loadTextures("./assets/images/synth_wave.bmp");
-
-    //loadTextures("./assets/images/more_synth.bmp");
-    //loadTextures("./assets/images/cyer_scraper.bmp");
-    //loadTextures("./assets/images/digi_punk.bmp");
-    //loadTextures("./assets/images/purple_liquid.bmp");
-    //loadTextures("./assets/images/scenary.bmp");
-
     glutDisplayFunc(display);
 
     // Initialize PhysX
     initPhysics();
-    //glutMouseFunc(mouseCallback);
-    //glutMotionFunc(motionCallback);
-
     glutReshapeFunc(reshape);
     glutKeyboardFunc(KeyPress);
     glutKeyboardUpFunc(KeyRelease);
-    //motionCallback(0, 0);
 
     // creates the main menu (right button)
     glutCreateMenu(menu);
+    glutAddMenuEntry("Restart", 'm');
     glutAddMenuEntry("Quit", 'q');
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 
