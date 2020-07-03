@@ -76,16 +76,9 @@ void Render::renderActors(PxRigidActor** actors, const PxU32 numActors, bool sha
             // render object
             glPushMatrix();
             glMultMatrixf(&shapePose.column0.x);
-
-            if (sleeping)
-            {
-                const PxVec3 darkColor = color * 0.25f;
-                glColor4f(darkColor.x, darkColor.y, darkColor.z, 1.0f);
-            }
-            else
-            {
-                glColor4f(color.x, color.y, color.z, 1.0f);
-            }
+           
+            glColor4f(color.x, color.y, color.z, 1.0f);
+            
 
             Render::renderGeometryHolder(h);
             glPopMatrix();
